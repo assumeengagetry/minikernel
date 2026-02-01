@@ -1,6 +1,29 @@
 # x86_64 内核引导代码
 # 这个文件包含了内核的引导入口点和初始化代码
+# 支持 Multiboot1 (QEMU -kernel) 和 Multiboot2 (GRUB2)
 
+# =============================================================================
+# Multiboot1 头部 (用于 QEMU -kernel 启动)
+# =============================================================================
+.section .multiboot
+.align 4
+
+# Multiboot1 常量
+.set MULTIBOOT_MAGIC,       0x1BADB002
+.set MULTIBOOT_ALIGN,       1 << 0              # 页对齐
+.set MULTIBOOT_MEMINFO,     1 << 1              # 内存信息
+.set MULTIBOOT_FLAGS,       MULTIBOOT_ALIGN | MULTIBOOT_MEMINFO
+.set MULTIBOOT_CHECKSUM,    -(MULTIBOOT_MAGIC + MULTIBOOT_FLAGS)
+
+# Multiboot1 头部
+multiboot_header:
+    .long MULTIBOOT_MAGIC
+    .long MULTIBOOT_FLAGS
+    .long MULTIBOOT_CHECKSUM
+
+# =============================================================================
+# Multiboot2 头部 (用于 GRUB2 启动)
+# =============================================================================
 .section .multiboot2
 .align 8
 

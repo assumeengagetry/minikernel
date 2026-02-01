@@ -1,0 +1,1 @@
+. "/home/assumeengage/Kernal/deactivate_conanrunenv-release-x86_64.sh"

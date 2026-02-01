@@ -140,6 +140,39 @@ clean() {
 }
 
 # =============================================================================
+# 创建 GRUB ISO 镜像
+# =============================================================================
+create_iso() {
+    info "创建 GRUB ISO 镜像..."
+
+    local kernel_elf="${BUILD_DIR}/kernel.elf"
+    if [ ! -f "$kernel_elf" ]; then
+        error "内核 ELF 文件不存在: $kernel_elf (请先构建)"
+    fi
+
+    if ! command -v grub-mkrescue >/dev/null 2>&1; then
+        error "grub-mkrescue 未安装 (sudo apt install grub-pc-bin xorriso)"
+    fi
+
+    local iso_dir="${BUILD_DIR}/iso"
+    mkdir -p "${iso_dir}/boot/grub"
+    cp "$kernel_elf" "${iso_dir}/boot/kernel.elf"
+
+    cat > "${iso_dir}/boot/grub/grub.cfg" << 'EOF'
+set timeout=0
+set default=0
+
+menuentry "MicroKernel" {
+    multiboot /boot/kernel.elf
+    boot
+}
+EOF
+
+    grub-mkrescue -o "${BUILD_DIR}/kernel.iso" "$iso_dir" 2>/dev/null
+    success "ISO 镜像已创建: ${BUILD_DIR}/kernel.iso"
+}
+
+# =============================================================================
 # 运行 QEMU
 # =============================================================================
 run_qemu() {
@@ -149,15 +182,16 @@ run_qemu() {
         error "qemu-system-x86_64 未安装"
     fi
 
-    local kernel_bin="${BUILD_DIR}/kernel.bin"
-    if [ ! -f "$kernel_bin" ]; then
-        error "内核二进制文件不存在: $kernel_bin (请先构建)"
+    local kernel_iso="${BUILD_DIR}/kernel.iso"
+    if [ ! -f "$kernel_iso" ]; then
+        info "ISO 镜像不存在，正在创建..."
+        create_iso
     fi
 
     qemu-system-x86_64 \
-        -kernel "$kernel_bin" \
+        -cdrom "$kernel_iso" \
         -m 512M \
-        -serial stdio \
+        -serial mon:stdio \
         -no-reboot \
         -no-shutdown
 }
@@ -172,17 +206,20 @@ run_debug() {
         error "qemu-system-x86_64 未安装"
     fi
 
+    local kernel_iso="${BUILD_DIR}/kernel.iso"
     local kernel_elf="${BUILD_DIR}/kernel.elf"
-    if [ ! -f "$kernel_elf" ]; then
-        error "内核 ELF 文件不存在: $kernel_elf (请先构建)"
+
+    if [ ! -f "$kernel_iso" ]; then
+        info "ISO 镜像不存在，正在创建..."
+        create_iso
     fi
 
     info "GDB 连接命令: gdb -ex 'target remote localhost:1234' ${kernel_elf}"
 
     qemu-system-x86_64 \
-        -kernel "$kernel_elf" \
+        -cdrom "$kernel_iso" \
         -m 512M \
-        -serial stdio \
+        -serial mon:stdio \
         -s -S \
         -no-reboot \
         -no-shutdown
@@ -221,6 +258,7 @@ show_help() {
     echo "  build        构建内核"
     echo "  clean        清理构建目录"
     echo "  rebuild      清理并重新构建"
+    echo "  iso          创建 GRUB ISO 镜像"
     echo "  qemu         在 QEMU 中运行内核"
     echo "  debug        调试模式运行 (等待 GDB)"
     echo "  disasm       生成反汇编输出"
@@ -263,6 +301,9 @@ main() {
             check_dependencies
             meson_setup
             build_kernel
+            ;;
+        iso)
+            create_iso
             ;;
         qemu|run)
             run_qemu

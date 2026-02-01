@@ -82,6 +82,7 @@ kernel_inc = include_directories(
 # Note: sched.c and sched_fair.c are excluded for now due to incomplete dependencies
 kernel_c_sources = files(
     'src/kernel/main.c',
+    'src/kernel/shell.c',
     'kernel/mm/buddy.c',
 )
 

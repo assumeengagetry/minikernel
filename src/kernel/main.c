@@ -9,6 +9,7 @@
 #include "../../kernel/include/mm.h"
 #include "../../kernel/include/list.h"
 #include "../../kernel/include/spinlock.h"
+#include "../../kernel/include/shell.h"
 
 /* Kernel version information */
 #define KERNEL_VERSION "0.1.0"
@@ -619,12 +620,12 @@ void kernel_main(void)
     /* Initialize the kernel */
     kernel_init();
 
-    /* Enter the scheduler */
-    printk("Entering scheduler...\n");
-    schedule();
+    /* Start the interactive shell */
+    printk("Starting shell...\n");
+    shell_run();
 
     /* Should never reach here */
-    panic("Scheduler returned unexpectedly!");
+    panic("Shell exited unexpectedly!");
 }
 
 /*

@@ -1,6 +1,7 @@
 from conan import ConanFile
 from conan.tools.meson import Meson, MesonToolchain
 from conan.tools.files import copy
+from conan.tools.layout import basic_layout
 import os
 
 
@@ -53,9 +54,6 @@ class MicroKernelConan(ConanFile):
         "scripts/*",
     )
 
-    # 生成器
-    generators = "MesonToolchain"
-
     def requirements(self):
         """
         定义项目依赖
@@ -74,7 +72,7 @@ class MicroKernelConan(ConanFile):
         # Meson 构建系统
         self.tool_requires("meson/1.3.0")
         # Ninja 构建后端
-        self.tool_requires("ninja/1.11.1")
+        self.tool_requires("ninja/1.13.2")
 
     def configure(self):
         """
@@ -83,6 +81,14 @@ class MicroKernelConan(ConanFile):
         # 内核使用纯 C，删除 C++ 相关设置
         del self.settings.compiler.libcxx
         del self.settings.compiler.cppstd
+
+    def layout(self):
+        """
+        定义项目布局，确保源目录和构建目录分离
+        """
+        self.folders.source = "."
+        self.folders.build = "build"
+        self.folders.generators = "build"
 
     def validate(self):
         """
@@ -101,12 +107,12 @@ class MicroKernelConan(ConanFile):
         # 生成 Meson 工具链文件
         tc = MesonToolchain(self)
 
-        # 传递选项给 Meson
+        # 传递选项给 Meson (转换为正确的 Python 类型)
         tc.project_options["arch"] = str(self.options.arch)
-        tc.project_options["kernel_debug"] = self.options.kernel_debug
-        tc.project_options["serial_debug"] = self.options.serial_debug
-        tc.project_options["enable_tests"] = self.options.enable_tests
-        tc.project_options["enable_userspace"] = self.options.enable_userspace
+        tc.project_options["kernel_debug"] = bool(self.options.kernel_debug)
+        tc.project_options["serial_debug"] = bool(self.options.serial_debug)
+        tc.project_options["enable_tests"] = bool(self.options.enable_tests)
+        tc.project_options["enable_userspace"] = bool(self.options.enable_userspace)
         tc.project_options["max_cpus"] = str(self.options.max_cpus)
 
         tc.generate()
