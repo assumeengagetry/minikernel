@@ -341,15 +341,15 @@ cd tests/integration && make test
 
 ## 📚 文档
 
-- [构建指南](BUILD.md) - 详细的构建说明
+- [构建指南](/docs/BUILD.md) - 详细的构建说明
 - [开发环境配置](docs/dev-setup.md) - 开发环境搭建指南
 - [项目路线图](docs/roadmap.md) - 开发计划和进度
-- [贡献指南](CONTRIBUTING.md) - 如何参与贡献
-- [行为准则](CODE_OF_CONDUCT.md) - 社区行为规范
+- [贡献指南](/docs/CONTRIBUTING.md) - 如何参与贡献
+- [行为准则](/docs/CODE_OF_CONDUCT.md) - 社区行为规范
 
 ## 🤝 贡献指南
 
-我们欢迎任何形式的贡献！请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详细信息。
+我们欢迎任何形式的贡献！请阅读 [CONTRIBUTING.md](/docs/CONTRIBUTING.md) 了解详细信息。
 
 ### 贡献流程
 

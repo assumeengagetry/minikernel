@@ -1,5 +1,0 @@
-[options]
-
-[properties]
-cross_file = ['/home/assumeengage/Kernal/cross/x86_64-none.ini']
-
