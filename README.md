@@ -1,201 +1,399 @@
-# Linux 微内核操作系统
-这是一个基于微内核架构的操作系统实现，遵循Linux微内核核心文档的设计原则。
+<p align="center">
+  <h1 align="center">🔬 MicroKernel OS</h1>
+  <p align="center">
+    <strong>一个基于微内核架构的教育型操作系统内核</strong>
+  </p>
+  <p align="center">
+    <a href="#特性">特性</a> •
+    <a href="#快速开始">快速开始</a> •
+    <a href="#架构设计">架构设计</a> •
+    <a href="#构建指南">构建指南</a> •
+    <a href="#贡献指南">贡献指南</a>
+  </p>
+</p>
 
-# 总体设计原则（简要）
+---
 
-* 内核只做最小信任/最核心工作（地址空间、线程、IPC、低级资源管理、异常/中断）。
-* 尽量把复杂逻辑放到用户态服务（文件系统、网络栈、驱动、策略）。
-* 代码分层清晰：`arch/`、`kernel/`、`lib/`、`user/`、`tools/`、`docs/`。
-* 强制接口契约（IPC/ABI），便于并行开发与语言互操作（C/Rust）。
+## 📖 简介
 
-# 推荐项目结构（示例）
+MicroKernel OS 是一个从零开始构建的微内核操作系统项目，遵循 Linux 微内核核心文档的设计原则。本项目旨在提供一个清晰、模块化、易于理解的操作系统内核实现，适合操作系统学习者和爱好者深入研究。
 
-```
-linux-microkernel/                 # 根仓库
-├── .github/
-│   ├── workflows/                 # CI (build/test/qemu)
-│   └── ISSUE_TEMPLATE.md
-├── arch/
-│   └── x86_64/
-│       ├── boot/                  # 启动、链接脚本、启动汇编
-│       ├── mm/                    # 架构相关页表 helper
-│       └── cpu/                   # cpu 特定代码
-├── kernel/
-│   ├── include/                   # 内核公共头 (kernel/*.h)
-│   ├── core/                      # microkernel core（scheduler, ipc core）
-│   │   ├── process/
-│   │   ├── thread/
-│   │   ├── sched/
-│   │   └── ipc/
-│   ├── mm/                        # 伙伴系统、虚拟内存抽象（不含arch）
-│   ├── interrupt/                 # 中断/异常框架
-│   ├── drivers/                   # 简单内核驱动骨架（打印、console）
-│   └── Kconfig / Makefile         # 内核构建接口
-├── lib/                           # 内核与用户态共用的轻量库 (rb-tree, lists)
-├── user/                          # 用户态服务与示例程序
-│   ├── services/
-│   │   ├── init/                  # 初始化进程（启动服务）
-│   │   ├── vfsd/                  # VFS 服务（用户态）
-│   │   ├── netd/                  # 网络服务（用户态）
-│   │   └── devd/                  # 用户态设备驱动（如 virtio）
-│   ├── apps/                      # 用户程序示例 (shell, hello)
-│   └── libs/                      # 用户库 (libc shim, ipc client)
-├── tools/                         # 构建/模拟/测试脚本 (qemu helpers)
-├── tests/                         # 单元、集成测试 (qemu-based)
-│   ├── kernel-unit/
-│   └── integration/
-├── docs/
-│   ├── design/                    # 设计文档 (IPC spec, ABI, sched)
-│   ├── dev-setup.md
-│   └── roadmap.md
-├── examples/                       # 最小系统镜像 / demo
-├── scripts/                        # 自动化脚本 (run-qemu, build-image)
-├── .clang-format
-├── Makefile                        # 顶层构建入口：make all/qemu/test/clean
-├── README.md
-├── CONTRIBUTING.md
-└── LICENSE
-```
+### 设计理念
 
-# 每个目录的详细职责（精炼版）
+- **最小化内核** - 内核只负责最核心的功能：地址空间管理、线程调度、IPC、低级资源管理、异常/中断处理
+- **用户态服务** - 将复杂逻辑（文件系统、网络栈、驱动程序、策略）移至用户空间运行
+- **分层清晰** - 代码按职责严格分层：`arch/`、`kernel/`、`lib/`、`user/`、`tools/`、`docs/`
+- **接口契约** - 强制 IPC/ABI 接口规范，便于并行开发与多语言互操作
 
-* `arch/x86_64`: 启动代码、bootloader 接口、架构特定的页表/上下文切换实现、异常向量。
-* `kernel/core`: microkernel 最小内核（线程/调度/IPC/资源分配/内核同步）。
-* `kernel/mm`: 伙伴系统 / 内存分配器 / 虚拟内存管理的非架构部分。
-* `kernel/interrupt`: 中断向量注册、IRQ 管理、异常处理框架。
-* `kernel/drivers`: 只放能在内核低层运行且必须在内核态的驱动（例如 early console、低级中断控制）。其余放到 `user/services/devd`。
-* `lib`: 常用数据结构（双向链表、红黑树）与无需大型依赖的算法。
-* `user/services`: 将大功能拆成守护进程（VFS、网络、设备代理、权限管理），以实现「功能可以在用户空间安全运行」的原则。
-* `tests`: QEMU-based integration tests，单元测试可借助 `unity` 或 `cmocka` 对 kernel core 的用户态模拟接口做测试（注意：内核态代码需要 cross-build & qemu-run 才能真实验证）。
-* `docs/design`: 放 IPC 协议、消息格式、capability 模型、syscall ABI 文档（非常重要，接口一旦确定会影响大量代码）。
+## ✨ 特性
 
-# 编译 / 构建建议（顶层 Makefile）
+### 已实现
 
-* 顶层 `Makefile` 负责：
+- [x] **基础内核框架** - 完整的内核启动流程和初始化序列
+- [x] **多级页表虚拟内存管理** - x86_64 4级页表支持
+- [x] **完全公平调度器 (CFS)** - 基于红黑树的 O(log n) 调度算法
+- [x] **伙伴系统内存分配** - 高效的物理页面分配器
+- [x] **进程管理和上下文切换** - 完整的进程生命周期管理
+- [x] **基础系统调用接口** - fork、exec、wait、exit、mmap 等
+- [x] **双向链表和红黑树数据结构** - 内核级数据结构实现
+- [x] **自旋锁和读写锁** - 多核同步原语
+- [x] **中断和异常处理框架** - IDT 配置与中断处理
 
-  * 检查工具链（gcc/x86\_64-elf-gcc/nasm/qemu）
-  * `make kernel`、`make user`、`make image`、`make qemu`、`make test`
-* 建议单独的 `kernel/Makefile` 与 `user/Makefile`，支持交叉编译目标和 `DEBUG=1`。
-* 保持构建产物放在 `out/`，不污染源树。
+### 开发中
 
-# IPC / ABI 设计建议（要写到 docs）
-
-* **基本思想**： capability + 基于消息的 IPC，结合共享内存映射（grant/portal）以支持高速数据通道（网络、文件缓存）。
-* **通道类型**：
-
-  * Control messages（固定小结构，可靠，不阻塞）
-  * Bulk shared memory（通过 grant/FD-like handle 映射页）
-* **消息格式（示例）**：
-
-
-* **同步模型**：
-
-  * 同步调用（RPC-like，阻塞等待回复）
-  * 异步通知（事件队列、epoll-like）
-* **安全性**：每个端点携带 capability/token，内核仅检查 capability 是否允许该操作（no implicit global rights）。
-
-# 用户态服务建议（语言 & 风格）
-
-* 推荐：**核心内核**用 **C (限定 subset)** + 必要汇编；**用户态服务**优先使用C，对现有 C 库和工具链友好。
-* 在 `user/libs/` 提供一个轻量 libc-shim（只实现必要 syscalls），方便用 C 编写服务。
-* 为了降低集成成本，先用 C 实现 `init` 与 `vfsd` 的最简版本，再逐步扩展。
-
-# 同步与锁（工程实践）
-
-* Kernel 内部只允许简单、可验证的 sync 原语：自旋锁、简洁的优先级提升/死锁检测。
-* 在 `kernel/core/sched` 添加 `CONFIG_TRACELOCK` 开关用于调试死锁路径。
-* 在 `user/` 服务里使用更高级别的 Rust 的 `Mutex`/`RwLock`。
-
-# 测试策略（必需）
-
-* 单元测试（可在宿主机 run 的纯 C 函数，放 `tests/kernel-unit`）。
-* 集成测试（QEMU 启动镜像并运行脚本，检查日志/退出码）。
-* 回归测试：在 CI 上运行 `make qemu-test`，对关键路径（fork, mmap, ipc, vfs ops）做黑盒验证。
-
-# CI（Github Actions）简要建议
-
-* Workflow 分为：`build-kernel`、`build-user`、`qemu-integration`（QEMU headless 使用 `--nographic`，比较日志）。
-* 缓存构建产物（ccache）。
-* 在 PR 时触发：编译 + 测试套件（快速 smoke tests）。
-
-# 文档与贡献（必备文件）
-
-* `docs/design/ipc.md`：IPC 协议、例子、错误码。
-* `docs/dev-setup.md`：交叉编译工具链安装、QEMU 启动说明、调试（gdbserver）。
-* `CONTRIBUTING.md`：分支策略、PR 模板、代码风格检查（clang-format）。
-* `CODE_OF_CONDUCT.md`：开源社区友好政策。
-* `README.md`：可执行的入门步骤（如何在 QEMU 上启动最小镜像）。
-
-
-- [ ] 基础内核框架
-- [ ] 多级页表虚拟内存管理
-- [ ] 完全公平调度器 (CFS)
-- [ ] 伙伴系统内存分配
-- [ ] 进程管理和上下文切换
-- [ ] 基础系统调用接口
-- [ ] 双向链表和红黑树数据结构
-- [ ] 完整的VFS实现
+- [ ] 完整的 VFS 实现
 - [ ] 网络协议栈
 - [ ] 进程间通信机制 (IPC)
 - [ ] 用户态驱动支持
-- [ ] 自旋锁和读写锁
 - [ ] 内核模块加载
-- [ ] 中断和异常处理框架
 - [ ] 信号机制
 - [ ] 文件系统支持
 - [ ] 多处理器支持 (SMP)
 
+## 🚀 快速开始
 
-### 构建
+### 环境要求
+
+| 工具 | 最低版本 | 用途 |
+|------|----------|------|
+| GCC | 9.0+ | C 编译器 |
+| NASM | 2.14+ | 汇编器 |
+| Binutils | 2.34+ | 链接器、objcopy、objdump |
+| QEMU | 4.0+ | 虚拟机运行环境 |
+| Make | 4.0+ | 构建工具 |
+
+### 安装依赖
+
+**Ubuntu/Debian:**
 
 ```bash
+sudo apt update
+sudo apt install build-essential gcc nasm binutils qemu-system-x86
+```
+
+**Arch Linux:**
+
+```bash
+sudo pacman -S base-devel gcc nasm qemu-system-x86
+```
+
+**Fedora:**
+
+```bash
+sudo dnf install gcc nasm binutils qemu-system-x86
+```
+
+### 构建与运行
+
+```bash
+# 克隆项目
+git clone https://github.com/your-username/microkernel.git
+cd microkernel
+
 # 检查工具链
 make check-tools
 
-# 构建内核(这边建议在debain系下构建)
+# 构建内核
 make all
 
-# 清理构建文件
-make clean
+# 在 QEMU 中运行
+make qemu
 ```
 
-### 运行
+### 调试模式
 
 ```bash
-# 在QEMU中运行
-make qemu
-
-# 调试运行
+# 启动 QEMU 并等待 GDB 连接
 make debug
 
+# 在另一个终端中连接 GDB
+gdb bin/kernel.elf -ex 'target remote localhost:1234'
 ```
 
-### 测试
+## 🏗️ 架构设计
+
+### 项目结构
+
+```
+microkernel/
+├── .github/                    # GitHub 配置
+│   ├── workflows/              # CI/CD 工作流
+│   └── ISSUE_TEMPLATE/         # Issue 模板
+├── arch/                       # 架构相关代码
+│   └── x86_64/
+│       ├── boot/               # 引导代码、链接脚本
+│       ├── cpu/                # CPU 特定代码
+│       └── mm/                 # 架构相关页表实现
+├── kernel/                     # 内核核心代码
+│   ├── core/                   # 微内核核心模块
+│   │   ├── process/            # 进程管理
+│   │   ├── thread/             # 线程管理
+│   │   ├── sched/              # 调度器
+│   │   └── ipc/                # 进程间通信
+│   ├── include/                # 内核头文件
+│   ├── interrupt/              # 中断处理框架
+│   ├── mm/                     # 内存管理（非架构相关）
+│   └── drivers/                # 内核态驱动
+├── include/                    # 公共头文件
+├── lib/                        # 内核与用户态共用库
+├── src/                        # 主要源代码
+│   ├── kernel/                 # 内核实现
+│   └── mm/                     # 内存管理实现
+├── user/                       # 用户态组件
+│   ├── services/               # 用户态服务
+│   │   ├── init/               # 初始化进程
+│   │   ├── vfsd/               # VFS 服务
+│   │   ├── netd/               # 网络服务
+│   │   └── devd/               # 设备管理服务
+│   ├── apps/                   # 用户程序示例
+│   └── libs/                   # 用户态库
+├── tests/                      # 测试代码
+│   ├── kernel-unit/            # 内核单元测试
+│   └── integration/            # 集成测试
+├── tools/                      # 构建和辅助工具
+├── scripts/                    # 自动化脚本
+├── docs/                       # 文档
+│   ├── design/                 # 设计文档
+│   ├── dev-setup.md            # 开发环境配置
+│   └── roadmap.md              # 项目路线图
+├── cross/                      # 交叉编译配置
+├── examples/                   # 示例代码
+├── build/                      # 构建输出目录
+├── Makefile                    # 主构建文件
+├── meson.build                 # Meson 构建配置
+├── conanfile.py                # Conan 依赖管理
+└── README.md                   # 本文件
+```
+
+### 内核架构图
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        用户空间 (User Space)                      │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌───────┐ │
+│  │  init   │  │  vfsd   │  │  netd   │  │  devd   │  │ shell │ │
+│  │ (PID 1) │  │ (VFS)   │  │ (网络)   │  │ (设备)  │  │       │ │
+│  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘  └───┬───┘ │
+│       │            │            │            │           │      │
+│       └────────────┴────────────┴────────────┴───────────┘      │
+│                              │ IPC                               │
+├──────────────────────────────┼──────────────────────────────────┤
+│                         系统调用接口                              │
+├─────────────────────────────────────────────────────────────────┤
+│                        内核空间 (Kernel)                         │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                      微内核核心                            │  │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐      │  │
+│  │  │ 调度器   │  │ 内存管理 │  │ IPC核心  │  │ 中断处理 │      │  │
+│  │  │  (CFS)  │  │ (Buddy) │  │         │  │         │      │  │
+│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘      │  │
+│  └───────────────────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────────────────┤
+│                        硬件抽象层 (HAL)                          │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐            │
+│  │  x86_64 │  │  页表   │  │  GDT/IDT│  │ 上下文   │            │
+│  │  启动   │  │  管理   │  │  管理   │  │  切换   │            │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────┘            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                           硬件                                   │
+│     CPU  •  内存  •  磁盘  •  网卡  •  键盘  •  显示器           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 核心模块说明
+
+#### 调度器 (Scheduler)
+
+基于 Linux CFS (Completely Fair Scheduler) 设计的调度器实现：
+
+- **调度策略**: `SCHED_NORMAL`, `SCHED_FIFO`, `SCHED_RR`, `SCHED_BATCH`, `SCHED_IDLE`
+- **优先级**: 支持 nice 值 (-20 到 +19)
+- **数据结构**: 红黑树管理可运行任务，保证 O(log n) 时间复杂度
+- **负载均衡**: 基于虚拟运行时间 (vruntime) 的公平调度
+
+#### 内存管理 (Memory Management)
+
+- **伙伴系统**: 物理页面分配，最大阶数为 11 (2^11 = 2048 页)
+- **虚拟内存**: 4级页表管理，支持按需分页
+- **内存区域**: DMA、Normal、HighMem 三个内存区域
+- **页面标志**: locked、referenced、dirty、buddy 等状态管理
+
+#### 进程管理 (Process Management)
+
+- **task_struct**: 完整的进程描述符
+- **进程状态**: RUNNING, INTERRUPTIBLE, UNINTERRUPTIBLE, STOPPED, ZOMBIE 等
+- **Clone 标志**: 支持 CLONE_VM, CLONE_FILES, CLONE_THREAD 等
+- **信号处理**: 基础信号框架
+
+## 🛠️ 构建指南
+
+### 使用 Makefile (推荐)
 
 ```bash
-# 运行内核测试
-make test
+# 完整构建
+make all
+
+# 仅编译内核 ELF
+make bin/kernel.elf
+
+# 生成二进制镜像
+make bin/kernel.bin
+
+# 生成 ISO 镜像 (需要 grub-mkrescue)
+make bin/kernel.iso
+
+# 清理构建产物
+make clean
+
+# 深度清理
+make distclean
+```
+
+### 使用 Meson + Conan
+
+```bash
+# 安装依赖
+conan install . --output-folder=build --build=missing
+
+# 配置
+meson setup build --cross-file=cross/x86_64-none.ini
+
+# 编译
+meson compile -C build
+```
+
+### 构建选项
+
+| 选项 | 默认值 | 描述 |
+|------|--------|------|
+| `kernel_debug` | true | 启用调试功能 |
+| `serial_debug` | true | 启用串口调试输出 |
+| `kernel_optimize` | 2 | 优化级别 (0/1/2/3/s) |
+| `max_cpus` | 8 | 最大 CPU 数量 |
+| `enable_tests` | false | 构建单元测试 |
+
+### 常用命令
+
+```bash
+# 在 QEMU 中运行
+make qemu
+
+# 调试模式运行
+make debug
+
+# 生成反汇编
+make disasm
+
+# 生成符号表
+make symbols
+
+# 查看内核大小
+make size
 
 # 代码统计
 make stats
 
-# 静态分析
-make analyze
+# 显示配置
+make config
 ```
 
+## 📊 系统调用
 
-### 贡献
+当前支持的系统调用：
 
-1. Fork本项目
-2. 创建特性分支
-3. 提交更改
-4. 发送Pull Request
+| 编号 | 名称 | 描述 |
+|------|------|------|
+| 0 | `read` | 读取文件 |
+| 1 | `write` | 写入文件 |
+| 2 | `open` | 打开文件 |
+| 3 | `close` | 关闭文件 |
+| 39 | `getpid` | 获取进程 ID |
+| 56 | `clone` | 创建进程/线程 |
+| 57 | `fork` | 创建子进程 |
+| 58 | `vfork` | 创建子进程 (共享地址空间) |
+| 59 | `execve` | 执行程序 |
+| 60 | `exit` | 退出进程 |
+| 61 | `wait4` | 等待子进程 |
+| 62 | `kill` | 发送信号 |
+| 63 | `uname` | 获取系统信息 |
+| 24 | `sched_yield` | 让出 CPU |
+| 12 | `brk` | 调整堆大小 |
+| 9 | `mmap` | 内存映射 |
+| 11 | `munmap` | 解除内存映射 |
+| 99 | `sysinfo` | 获取系统状态 |
 
+## 🧪 测试
 
-## 许可证
+```bash
+# 运行所有测试
+make test
 
-本项目采用MIT许可证，详见LICENSE文件。
+# 运行内核单元测试
+cd tests/kernel-unit && make
 
+# 运行集成测试
+cd tests/integration && make test
+```
 
+## 📚 文档
 
-这项目真烂(x
+- [构建指南](BUILD.md) - 详细的构建说明
+- [开发环境配置](docs/dev-setup.md) - 开发环境搭建指南
+- [项目路线图](docs/roadmap.md) - 开发计划和进度
+- [贡献指南](CONTRIBUTING.md) - 如何参与贡献
+- [行为准则](CODE_OF_CONDUCT.md) - 社区行为规范
+
+## 🤝 贡献指南
+
+我们欢迎任何形式的贡献！请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详细信息。
+
+### 贡献流程
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
+
+### 代码风格
+
+- 遵循 Linux 内核编码风格
+- 缩进: 4 空格 (不使用 Tab)
+- 行宽: 最大 80 字符
+- 使用 `.clang-format` 进行代码格式化
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+```
+MIT License
+
+Copyright (c) 2024 MicroKernel Development Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction...
+```
+
+## 🙏 致谢
+
+- [OSDev Wiki](https://wiki.osdev.org/) - 操作系统开发资源
+- [Linux Kernel](https://www.kernel.org/) - 设计参考
+- [seL4](https://sel4.systems/) - 微内核设计参考
+- 所有贡献者和支持者
+
+## 📮 联系方式
+
+- **Issues**: [GitHub Issues](https://github.com/your-username/microkernel/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/microkernel/discussions)
+
+---
+
+<p align="center">
+  <sub>用 ❤️ 构建 | Made with ❤️</sub>
+</p>

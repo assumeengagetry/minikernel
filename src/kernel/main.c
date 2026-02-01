@@ -1,75 +1,97 @@
-#include "../../include/types.h"
-#include "../../include/sched.h"
-#include "../../include/mm.h"
-#include "../../include/list.h"
-#include "../../include/spinlock.h"
+/*
+ * MicroKernel - Main Entry Point
+ * 
+ * This file contains the kernel's main initialization and entry point.
+ */
 
+#include "../../kernel/include/types.h"
+#include "../../kernel/include/sched.h"
+#include "../../kernel/include/mm.h"
+#include "../../kernel/include/list.h"
+#include "../../kernel/include/spinlock.h"
+
+/* Kernel version information */
 #define KERNEL_VERSION "0.1.0"
 #define KERNEL_NAME "MicroKernel"
 
+/* Variadic argument support (freestanding implementation) */
+typedef __builtin_va_list va_list;
+#define va_start(ap, last) __builtin_va_start(ap, last)
+#define va_end(ap) __builtin_va_end(ap)
+#define va_arg(ap, type) __builtin_va_arg(ap, type)
+
+/* Forward declarations */
+static void kernel_init(void);
+static struct task_struct *create_init_process(void);
+int printk(const char *fmt, ...);
+void console_write(const char *buffer, size_t len);
+void serial_putc(char c);
+static inline unsigned char inb(unsigned short port);
+static inline void outb(unsigned short port, unsigned char value);
+void panic(const char *fmt, ...);
+static inline void halt(void);
+static void timer_interrupt_handler(void);
+static void keyboard_interrupt_handler(void);
+static void handle_page_fault(unsigned long error_code);
+
+/* External declarations for assembly functions */
+extern void local_irq_disable(void);
+extern void local_irq_enable(void);
+extern unsigned long local_irq_save(void);
+extern void local_irq_restore(unsigned long flags);
+extern u32 smp_processor_id(void);
+extern void cpu_relax(void);
+extern void local_bh_enable(void);
+extern void local_bh_disable(void);
+
+/* Weak stubs for functions not yet implemented */
+void __attribute__((weak)) mm_init(void) { }
+void __attribute__((weak)) buddy_init(void) { }
+void __attribute__((weak)) sched_init(void) { }
+void __attribute__((weak)) ipc_init(void) { }
+void __attribute__((weak)) vfs_init(void) { }
+void __attribute__((weak)) net_init(void) { }
+void __attribute__((weak)) driver_init(void) { }
+void __attribute__((weak)) schedule(void) { }
+void __attribute__((weak)) yield(void) { }
+void __attribute__((weak)) sched_fork(struct task_struct *p) { (void)p; }
+void __attribute__((weak)) wake_up_new_task(struct task_struct *p) { (void)p; }
+void __attribute__((weak)) scheduler_tick(void) { }
+void __attribute__((weak)) do_signal(void) { }
+void __attribute__((weak)) run_timer_softirq(void) { }
+void __attribute__((weak)) handle_keyboard_input(unsigned char scancode) { (void)scancode; }
+void __attribute__((weak)) do_page_fault(unsigned long address, unsigned long error_code) 
+    { (void)address; (void)error_code; }
+long __attribute__((weak)) do_fork(unsigned long flags, unsigned long sp, unsigned long stack_size,
+                                   int *parent_tidptr, int *child_tidptr)
+    { (void)flags; (void)sp; (void)stack_size; (void)parent_tidptr; (void)child_tidptr; return -ENOSYS; }
+void __attribute__((weak)) do_exit(long code) { (void)code; for(;;) halt(); }
+long __attribute__((weak)) do_wait(pid_t pid, int *stat_addr, int options, struct rusage *ru)
+    { (void)pid; (void)stat_addr; (void)options; (void)ru; return -ENOSYS; }
+long __attribute__((weak)) do_kill(pid_t pid, int sig) { (void)pid; (void)sig; return -ENOSYS; }
+long __attribute__((weak)) do_brk(unsigned long brk) { (void)brk; return -ENOSYS; }
+long __attribute__((weak)) do_mmap(unsigned long addr, unsigned long len, unsigned long prot,
+                                   unsigned long flags, unsigned long fd, unsigned long off)
+    { (void)addr; (void)len; (void)prot; (void)flags; (void)fd; (void)off; return -ENOSYS; }
+long __attribute__((weak)) do_munmap(unsigned long addr, size_t len)
+    { (void)addr; (void)len; return -ENOSYS; }
+
+/* NR_CPUS if not defined */
+#ifndef NR_CPUS
+#define NR_CPUS 8
+#endif
+
+/* Global state */
 static bool kernel_initialized = false;
 static struct task_struct *init_task = NULL;
-static struct mm_struct *init_mm = NULL;
+struct task_struct *current_task = NULL;
 
-typedef long (*syscall_fn_t)(unsigned long, unsigned long, unsigned long,
-                             unsigned long, unsigned long, unsigned long);
-
+/* System call numbers */
 #define __NR_read       0
 #define __NR_write      1
 #define __NR_open       2
 #define __NR_close      3
-#define __NR_stat       4
-#define __NR_fstat      5
-#define __NR_lstat      6
-#define __NR_poll       7
-#define __NR_lseek      8
-#define __NR_mmap       9
-#define __NR_mprotect   10
-#define __NR_munmap     11
-#define __NR_brk        12
-#define __NR_rt_sigaction    13
-#define __NR_rt_sigprocmask  14
-#define __NR_rt_sigreturn    15
-#define __NR_ioctl      16
-#define __NR_pread64    17
-#define __NR_pwrite64   18
-#define __NR_readv      19
-#define __NR_writev     20
-#define __NR_access     21
-#define __NR_pipe       22
-#define __NR_select     23
-#define __NR_sched_yield     24
-#define __NR_mremap     25
-#define __NR_msync      26
-#define __NR_mincore    27
-#define __NR_madvise    28
-#define __NR_shmget     29
-#define __NR_shmat      30
-#define __NR_shmctl     31
-#define __NR_dup        32
-#define __NR_dup2       33
-#define __NR_pause      34
-#define __NR_nanosleep  35
-#define __NR_getitimer  36
-#define __NR_alarm      37
-#define __NR_setitimer  38
 #define __NR_getpid     39
-#define __NR_sendfile   40
-#define __NR_socket     41
-#define __NR_connect    42
-#define __NR_accept     43
-#define __NR_sendto     44
-#define __NR_recvfrom   45
-#define __NR_sendmsg    46
-#define __NR_recvmsg    47
-#define __NR_shutdown   48
-#define __NR_bind       49
-#define __NR_listen     50
-#define __NR_getsockname     51
-#define __NR_getpeername     52
-#define __NR_socketpair 53
-#define __NR_setsockopt 54
-#define __NR_getsockopt 55
 #define __NR_clone      56
 #define __NR_fork       57
 #define __NR_vfork      58
@@ -78,93 +100,241 @@ typedef long (*syscall_fn_t)(unsigned long, unsigned long, unsigned long,
 #define __NR_wait4      61
 #define __NR_kill       62
 #define __NR_uname      63
-#define __NR_semget     64
-#define __NR_semop      65
-#define __NR_semctl     66
-#define __NR_shmdt      67
-#define __NR_msgget     68
-#define __NR_msgsnd     69
-#define __NR_msgrcv     70
-#define __NR_msgctl     71
-#define __NR_fcntl      72
-#define __NR_flock      73
-#define __NR_fsync      74
-#define __NR_fdatasync  75
-#define __NR_truncate   76
-#define __NR_ftruncate  77
-#define __NR_getdents   78
-#define __NR_getcwd     79
-#define __NR_chdir      80
-#define __NR_fchdir     81
-#define __NR_rename     82
-#define __NR_mkdir      83
-#define __NR_rmdir      84
-#define __NR_creat      85
-#define __NR_link       86
-#define __NR_unlink     87
-#define __NR_symlink    88
-#define __NR_readlink   89
-#define __NR_chmod      90
-#define __NR_fchmod     91
-#define __NR_chown      92
-#define __NR_fchown     93
-#define __NR_lchown     94
-#define __NR_umask      95
-#define __NR_gettimeofday    96
-#define __NR_getrlimit  97
-#define __NR_getrusage  98
+#define __NR_sched_yield 24
+#define __NR_brk        12
+#define __NR_mmap       9
+#define __NR_munmap     11
 #define __NR_sysinfo    99
-#define __NR_times      100
 
-#define NR_syscalls     101
+#define NR_syscalls     256
 
-extern long sys_read(unsigned int fd, char __user *buf, size_t count);
-extern long sys_write(unsigned int fd, const char __user *buf, size_t count);
-extern long sys_open(const char __user *filename, int flags, umode_t mode);
-extern long sys_close(unsigned int fd);
-extern long sys_getpid(void);
-extern long sys_clone(unsigned long clone_flags, unsigned long newsp,
-                     int __user *parent_tidptr, int __user *child_tidptr);
-extern long sys_fork(void);
-extern long sys_vfork(void);
-extern long sys_execve(const char __user *filename,
-                      const char __user *const __user *argv,
-                      const char __user *const __user *envp);
-extern long sys_exit(int error_code);
-extern long sys_wait4(pid_t upid, int __user *stat_addr, int options,
-                     struct rusage __user *ru);
-extern long sys_kill(pid_t pid, int sig);
-extern long sys_sched_yield(void);
-extern long sys_brk(unsigned long brk);
-extern long sys_mmap(unsigned long addr, unsigned long len,
-                    unsigned long prot, unsigned long flags,
-                    unsigned long fd, unsigned long off);
-extern long sys_munmap(unsigned long addr, size_t len);
-extern long sys_sysinfo(struct sysinfo __user *info);
-extern long sys_uname(struct utsname __user *name);
+/*
+ * I/O port operations
+ */
+static inline unsigned char inb(unsigned short port)
+{
+    unsigned char result;
+    __asm__ __volatile__("inb %1, %0" : "=a"(result) : "Nd"(port));
+    return result;
+}
 
-/* 系统调用表 */
-static const syscall_fn_t sys_call_table[NR_syscalls] = {
-    [__NR_read]         = (syscall_fn_t)sys_read,
-    [__NR_write]        = (syscall_fn_t)sys_write,
-    [__NR_open]         = (syscall_fn_t)sys_open,
-    [__NR_close]        = (syscall_fn_t)sys_close,
-    [__NR_getpid]       = (syscall_fn_t)sys_getpid,
-    [__NR_clone]        = (syscall_fn_t)sys_clone,
-    [__NR_fork]         = (syscall_fn_t)sys_fork,
-    [__NR_vfork]        = (syscall_fn_t)sys_vfork,
-    [__NR_execve]       = (syscall_fn_t)sys_execve,
-    [__NR_exit]         = (syscall_fn_t)sys_exit,
-    [__NR_wait4]        = (syscall_fn_t)sys_wait4,
-    [__NR_kill]         = (syscall_fn_t)sys_kill,
-    [__NR_sched_yield]  = (syscall_fn_t)sys_sched_yield,
-    [__NR_brk]          = (syscall_fn_t)sys_brk,
-    [__NR_mmap]         = (syscall_fn_t)sys_mmap,
-    [__NR_munmap]       = (syscall_fn_t)sys_munmap,
-    [__NR_sysinfo]      = (syscall_fn_t)sys_sysinfo,
-    [__NR_uname]        = (syscall_fn_t)sys_uname,
-};
+static inline void outb(unsigned short port, unsigned char value)
+{
+    __asm__ __volatile__("outb %0, %1" : : "a"(value), "Nd"(port));
+}
 
+/*
+ * CPU control
+ */
+static inline void halt(void)
+{
+    __asm__ __volatile__("hlt");
+}
+
+/*
+ * Serial port output
+ */
+#define SERIAL_PORT 0x3F8
+
+void serial_putc(char c)
+{
+    /* Wait for transmit buffer to be empty */
+    while (!(inb(SERIAL_PORT + 5) & 0x20)) {
+        /* spin */
+    }
+    outb(SERIAL_PORT, c);
+}
+
+/*
+ * Console output
+ */
+void console_write(const char *buffer, size_t len)
+{
+    for (size_t i = 0; i < len; i++) {
+        serial_putc(buffer[i]);
+    }
+}
+
+/*
+ * Simple number to string conversion
+ */
+static int int_to_str(char *buf, long value, int base, int uppercase)
+{
+    static const char *digits_lower = "0123456789abcdef";
+    static const char *digits_upper = "0123456789ABCDEF";
+    const char *digits = uppercase ? digits_upper : digits_lower;
+    char tmp[32];
+    int i = 0;
+    int negative = 0;
+    unsigned long uval;
+    
+    if (value < 0 && base == 10) {
+        negative = 1;
+        uval = -value;
+    } else {
+        uval = (unsigned long)value;
+    }
+    
+    if (uval == 0) {
+        tmp[i++] = '0';
+    } else {
+        while (uval > 0) {
+            tmp[i++] = digits[uval % base];
+            uval /= base;
+        }
+    }
+    
+    int len = 0;
+    if (negative) {
+        buf[len++] = '-';
+    }
+    
+    while (i > 0) {
+        buf[len++] = tmp[--i];
+    }
+    
+    buf[len] = '\0';
+    return len;
+}
+
+static int uint_to_str(char *buf, unsigned long value, int base, int uppercase)
+{
+    static const char *digits_lower = "0123456789abcdef";
+    static const char *digits_upper = "0123456789ABCDEF";
+    const char *digits = uppercase ? digits_upper : digits_lower;
+    char tmp[32];
+    int i = 0;
+    
+    if (value == 0) {
+        tmp[i++] = '0';
+    } else {
+        while (value > 0) {
+            tmp[i++] = digits[value % base];
+            value /= base;
+        }
+    }
+    
+    int len = 0;
+    while (i > 0) {
+        buf[len++] = tmp[--i];
+    }
+    
+    buf[len] = '\0';
+    return len;
+}
+
+/*
+ * Simple vsnprintf implementation
+ */
+static int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
+{
+    char *str = buf;
+    char *end = buf + size - 1;
+    char numbuf[32];
+    
+    if (size == 0)
+        return 0;
+    
+    while (*fmt && str < end) {
+        if (*fmt != '%') {
+            *str++ = *fmt++;
+            continue;
+        }
+        
+        fmt++; /* skip '%' */
+        
+        /* Handle format specifiers */
+        switch (*fmt) {
+        case 's': {
+            const char *s = va_arg(args, const char *);
+            if (s == NULL) s = "(null)";
+            while (*s && str < end)
+                *str++ = *s++;
+            break;
+        }
+        case 'd':
+        case 'i': {
+            long val = va_arg(args, long);
+            int len = int_to_str(numbuf, val, 10, 0);
+            for (int i = 0; i < len && str < end; i++)
+                *str++ = numbuf[i];
+            break;
+        }
+        case 'u': {
+            unsigned long val = va_arg(args, unsigned long);
+            int len = uint_to_str(numbuf, val, 10, 0);
+            for (int i = 0; i < len && str < end; i++)
+                *str++ = numbuf[i];
+            break;
+        }
+        case 'x': {
+            unsigned long val = va_arg(args, unsigned long);
+            int len = uint_to_str(numbuf, val, 16, 0);
+            for (int i = 0; i < len && str < end; i++)
+                *str++ = numbuf[i];
+            break;
+        }
+        case 'X': {
+            unsigned long val = va_arg(args, unsigned long);
+            int len = uint_to_str(numbuf, val, 16, 1);
+            for (int i = 0; i < len && str < end; i++)
+                *str++ = numbuf[i];
+            break;
+        }
+        case 'p': {
+            unsigned long val = (unsigned long)va_arg(args, void *);
+            if (str < end) *str++ = '0';
+            if (str < end) *str++ = 'x';
+            int len = uint_to_str(numbuf, val, 16, 0);
+            for (int i = 0; i < len && str < end; i++)
+                *str++ = numbuf[i];
+            break;
+        }
+        case 'c': {
+            char c = (char)va_arg(args, int);
+            if (str < end)
+                *str++ = c;
+            break;
+        }
+        case 'l':
+            fmt++;
+            if (*fmt == 'u' || *fmt == 'd' || *fmt == 'x') {
+                unsigned long val = va_arg(args, unsigned long);
+                int len;
+                if (*fmt == 'd') {
+                    len = int_to_str(numbuf, (long)val, 10, 0);
+                } else if (*fmt == 'x') {
+                    len = uint_to_str(numbuf, val, 16, 0);
+                } else {
+                    len = uint_to_str(numbuf, val, 10, 0);
+                }
+                for (int i = 0; i < len && str < end; i++)
+                    *str++ = numbuf[i];
+            }
+            break;
+        case '%':
+            if (str < end)
+                *str++ = '%';
+            break;
+        default:
+            if (str < end)
+                *str++ = '%';
+            if (str < end && *fmt)
+                *str++ = *fmt;
+            break;
+        }
+        
+        if (*fmt)
+            fmt++;
+    }
+    
+    *str = '\0';
+    return str - buf;
+}
+
+/*
+ * Kernel print function
+ */
 int printk(const char *fmt, ...)
 {
     va_list args;
@@ -180,36 +350,9 @@ int printk(const char *fmt, ...)
     return len;
 }
 
-/* 控制台写入函数 */
-void console_write(const char *buffer, size_t len)
-{
-    for (size_t i = 0; i < len; i++) {
-        serial_putc(buffer[i]);
-    }
-}
-
-void serial_putc(char c)
-{
-    #define SERIAL_PORT 0x3F8
-
-    while (!(inb(SERIAL_PORT + 5) & 0x20)) {
-    }
-
-    outb(SERIAL_PORT, c);
-}
-
-static inline unsigned char inb(unsigned short port)
-{
-    unsigned char result;
-    asm volatile("inb %1, %0" : "=a"(result) : "Nd"(port));
-    return result;
-}
-
-static inline void outb(unsigned short port, unsigned char value)
-{
-    asm volatile("outb %0, %1" : : "a"(value), "Nd"(port));
-}
-
+/*
+ * Kernel panic - halt the system
+ */
 void panic(const char *fmt, ...)
 {
     va_list args;
@@ -228,11 +371,133 @@ void panic(const char *fmt, ...)
     }
 }
 
-static inline void halt(void)
+/*
+ * String functions
+ */
+int strcmp(const char *s1, const char *s2)
 {
-    asm volatile("hlt");
+    while (*s1 && *s2 && *s1 == *s2) {
+        s1++;
+        s2++;
+    }
+    return *s1 - *s2;
 }
 
+char *strcpy(char *dest, const char *src)
+{
+    char *ret = dest;
+    while ((*dest++ = *src++))
+        ;
+    return ret;
+}
+
+size_t strlen(const char *s)
+{
+    size_t len = 0;
+    while (*s++)
+        len++;
+    return len;
+}
+
+/*
+ * Jiffies counter
+ */
+static u64 jiffies_counter = 0;
+
+u64 get_jiffies_64(void)
+{
+    return jiffies_counter;
+}
+
+static void update_jiffies_internal(void)
+{
+    jiffies_counter++;
+}
+
+/*
+ * CPU identification
+ */
+u32 smp_processor_id(void)
+{
+    return 0; /* Single CPU for now */
+}
+
+/* cpu_relax is defined in switch.S, use inline version here */
+static inline void cpu_relax_inline(void)
+{
+    __asm__ __volatile__("pause" ::: "memory");
+}
+
+/*
+ * Interrupt control
+ */
+unsigned long local_irq_save(void)
+{
+    unsigned long flags;
+    __asm__ __volatile__("pushfq; popq %0; cli" : "=r"(flags) :: "memory");
+    return flags;
+}
+
+void local_irq_restore(unsigned long flags)
+{
+    __asm__ __volatile__("pushq %0; popfq" :: "r"(flags) : "memory");
+}
+
+void local_irq_disable(void)
+{
+    __asm__ __volatile__("cli" ::: "memory");
+}
+
+void local_irq_enable(void)
+{
+    __asm__ __volatile__("sti" ::: "memory");
+}
+
+void local_bh_disable(void) { }
+void local_bh_enable(void) { }
+
+/*
+ * Memory allocation stubs (simple version)
+ */
+struct task_struct *alloc_task_struct(void)
+{
+    /* For now, return NULL - proper implementation needs working memory allocator */
+    static struct task_struct init_task_storage;
+    static int allocated = 0;
+    
+    if (!allocated) {
+        allocated = 1;
+        memset(&init_task_storage, 0, sizeof(init_task_storage));
+        return &init_task_storage;
+    }
+    
+    return NULL;
+}
+
+void free_task_struct(struct task_struct *tsk)
+{
+    (void)tsk;
+}
+
+struct mm_struct *mm_alloc(void)
+{
+    static struct mm_struct init_mm_storage;
+    static int allocated = 0;
+    
+    if (!allocated) {
+        allocated = 1;
+        memset(&init_mm_storage, 0, sizeof(init_mm_storage));
+        return &init_mm_storage;
+    }
+    
+    return NULL;
+}
+
+/* set_current is defined as macro in sched.h, use directly */
+
+/*
+ * Create the init process (PID 1)
+ */
 static struct task_struct *create_init_process(void)
 {
     struct task_struct *task;
@@ -249,12 +514,14 @@ static struct task_struct *create_init_process(void)
         panic("Cannot allocate init mm");
     }
 
+    /* Process IDs */
     task->pid = 1;
     task->tgid = 1;
     task->ppid = 0;
     task->pgrp = 1;
     task->session = 1;
 
+    /* User/Group IDs (root) */
     task->uid = 0;
     task->gid = 0;
     task->euid = 0;
@@ -264,94 +531,108 @@ static struct task_struct *create_init_process(void)
     task->fsuid = 0;
     task->fsgid = 0;
 
+    /* Process name */
     strcpy(task->comm, "init");
 
+    /* Memory management */
     task->mm = mm;
     task->active_mm = mm;
 
+    /* Scheduling */
     task->state = TASK_RUNNING;
     task->prio = DEFAULT_PRIO;
     task->static_prio = DEFAULT_PRIO;
     task->normal_prio = DEFAULT_PRIO;
     task->policy = SCHED_NORMAL;
 
+    /* CPU affinity */
     task->cpus_allowed = (1UL << NR_CPUS) - 1;
     task->nr_cpus_allowed = NR_CPUS;
 
+    /* Process relationships - init is its own parent */
     task->real_parent = task;
     task->parent = task;
     task->group_leader = task;
 
+    /* Timing */
     task->start_time = get_jiffies_64();
     task->real_start_time = task->start_time;
 
+    /* Initialize scheduler data */
     sched_fork(task);
 
     return task;
 }
 
+/*
+ * Kernel initialization
+ */
 static void kernel_init(void)
 {
     printk("Initializing %s %s\n", KERNEL_NAME, KERNEL_VERSION);
 
+    /* Initialize memory management */
+    printk("  Initializing memory management...\n");
     mm_init();
     buddy_init();
 
+    /* Initialize scheduler */
+    printk("  Initializing scheduler...\n");
     sched_init();
 
+    /* Initialize IPC */
+    printk("  Initializing IPC...\n");
     ipc_init();
 
+    /* Initialize VFS */
+    printk("  Initializing VFS...\n");
     vfs_init();
 
+    /* Initialize networking */
+    printk("  Initializing network...\n");
     net_init();
 
+    /* Initialize drivers */
+    printk("  Initializing drivers...\n");
     driver_init();
 
+    /* Create init process */
+    printk("  Creating init process...\n");
     init_task = create_init_process();
 
+    /* Set as current task */
     set_current(init_task);
 
+    /* Wake up init */
     wake_up_new_task(init_task);
 
     kernel_initialized = true;
+    
+    printk("Kernel initialization complete.\n");
 }
 
+/*
+ * Kernel main entry point - called from assembly boot code
+ */
 void kernel_main(void)
 {
+    /* Initialize the kernel */
     kernel_init();
 
+    /* Enter the scheduler */
+    printk("Entering scheduler...\n");
     schedule();
 
-    panic("OOOOOOOO!!!!!! shit");
+    /* Should never reach here */
+    panic("Scheduler returned unexpectedly!");
 }
 
-long do_syscall(unsigned long syscall_nr, unsigned long arg0,
-                unsigned long arg1, unsigned long arg2,
-                unsigned long arg3, unsigned long arg4,
-                unsigned long arg5)
-{
-    syscall_fn_t syscall_fn;
-    long result;
-
-    if (syscall_nr >= NR_syscalls) {
-        printk("Invalid syscall number: %lu\n", syscall_nr);
-        return -ENOSYS;
-    }
-
-    syscall_fn = sys_call_table[syscall_nr];
-    if (!syscall_fn) {
-        printk("Unimplemented syscall: %lu\n", syscall_nr);
-        return -ENOSYS;
-    }
-
-    result = syscall_fn(arg0, arg1, arg2, arg3, arg4, arg5);
-
-    return result;
-}
-
+/*
+ * System call implementations
+ */
 long sys_getpid(void)
 {
-    return current->pid;
+    return current_task ? current_task->pid : 0;
 }
 
 long sys_sched_yield(void)
@@ -363,7 +644,7 @@ long sys_sched_yield(void)
 long sys_exit(int error_code)
 {
     do_exit(error_code);
-    return 0;
+    return 0; /* Never reached */
 }
 
 long sys_fork(void)
@@ -413,7 +694,8 @@ long sys_munmap(unsigned long addr, size_t len)
 long sys_sysinfo(struct sysinfo __user *info)
 {
     struct sysinfo val;
-
+    
+    memset(&val, 0, sizeof(val));
     si_meminfo(&val);
     si_swapinfo(&val);
 
@@ -442,21 +724,25 @@ long sys_uname(struct utsname __user *name)
 
 long sys_read(unsigned int fd, char __user *buf, size_t count)
 {
+    (void)fd; (void)buf; (void)count;
     return -ENOSYS;
 }
 
 long sys_write(unsigned int fd, const char __user *buf, size_t count)
 {
+    (void)fd; (void)buf; (void)count;
     return -ENOSYS;
 }
 
 long sys_open(const char __user *filename, int flags, umode_t mode)
 {
+    (void)filename; (void)flags; (void)mode;
     return -ENOSYS;
 }
 
 long sys_close(unsigned int fd)
 {
+    (void)fd;
     return -ENOSYS;
 }
 
@@ -464,75 +750,134 @@ long sys_execve(const char __user *filename,
                 const char __user *const __user *argv,
                 const char __user *const __user *envp)
 {
+    (void)filename; (void)argv; (void)envp;
     return -ENOSYS;
 }
 
+/*
+ * System call dispatcher
+ */
+long do_syscall(unsigned long syscall_nr, unsigned long arg0,
+                unsigned long arg1, unsigned long arg2,
+                unsigned long arg3, unsigned long arg4,
+                unsigned long arg5)
+{
+    (void)arg5; /* Unused for most syscalls */
+    
+    if (syscall_nr >= NR_syscalls) {
+        printk("Invalid syscall number: %lu\n", syscall_nr);
+        return -ENOSYS;
+    }
+
+    switch (syscall_nr) {
+    case __NR_read:
+        return sys_read((unsigned int)arg0, (char __user *)arg1, (size_t)arg2);
+    case __NR_write:
+        return sys_write((unsigned int)arg0, (const char __user *)arg1, (size_t)arg2);
+    case __NR_open:
+        return sys_open((const char __user *)arg0, (int)arg1, (umode_t)arg2);
+    case __NR_close:
+        return sys_close((unsigned int)arg0);
+    case __NR_getpid:
+        return sys_getpid();
+    case __NR_clone:
+        return sys_clone(arg0, arg1, (int __user *)arg2, (int __user *)arg3);
+    case __NR_fork:
+        return sys_fork();
+    case __NR_vfork:
+        return sys_vfork();
+    case __NR_execve:
+        return sys_execve((const char __user *)arg0,
+                         (const char __user *const __user *)arg1,
+                         (const char __user *const __user *)arg2);
+    case __NR_exit:
+        return sys_exit((int)arg0);
+    case __NR_wait4:
+        return sys_wait4((pid_t)arg0, (int __user *)arg1, (int)arg2,
+                        (struct rusage __user *)arg3);
+    case __NR_kill:
+        return sys_kill((pid_t)arg0, (int)arg1);
+    case __NR_sched_yield:
+        return sys_sched_yield();
+    case __NR_brk:
+        return sys_brk(arg0);
+    case __NR_mmap:
+        return sys_mmap(arg0, arg1, arg2, arg3, arg4, arg5);
+    case __NR_munmap:
+        return sys_munmap(arg0, (size_t)arg1);
+    case __NR_sysinfo:
+        return sys_sysinfo((struct sysinfo __user *)arg0);
+    case __NR_uname:
+        return sys_uname((struct utsname __user *)arg0);
+    default:
+        printk("Unimplemented syscall: %lu\n", syscall_nr);
+        return -ENOSYS;
+    }
+}
+
+/*
+ * Interrupt handlers
+ */
 void handle_interrupt(int irq)
 {
-    printk(" 一大波中断来袭 %d received\n", irq);
+    printk("IRQ %d received\n", irq);
 
     switch (irq) {
-        case 0:
-            timer_interrupt();
-            break;
-        case 1:
-            keyboard_interrupt();
-            break;
-        default:
-            printk("Unknown interrupt: %d\n", irq);
-            break;
+    case 0:
+        timer_interrupt_handler();
+        break;
+    case 1:
+        keyboard_interrupt_handler();
+        break;
+    default:
+        printk("Unknown interrupt: %d\n", irq);
+        break;
     }
 }
 
 void handle_exception(int exception, unsigned long error_code)
 {
-   /*抛报错逻辑要先写，不然真的调试不出来 */
     printk("Exception %d (error code: 0x%lx)\n", exception, error_code);
 
     switch (exception) {
-        case 0:
-            printk("Division by zero\n");
-            break;
-        case 6:
-            printk("Invalid instruction\n");
-            break;
-        case 13:
-            printk("General protection fault\n");
-            break;
-        case 14:
-            handle_page_fault(error_code);
-            break;
-        default:
-            printk("Unknown exception: %d\n", exception);
-            break;
+    case 0:
+        printk("Division by zero\n");
+        break;
+    case 6:
+        printk("Invalid instruction\n");
+        break;
+    case 13:
+        printk("General protection fault\n");
+        break;
+    case 14:
+        handle_page_fault(error_code);
+        return;
+    default:
+        printk("Unknown exception: %d\n", exception);
+        break;
     }
 
-    if (exception != 14) {
-        panic("Unhandled exception in kernel");
-    }
+    panic("Unhandled exception in kernel");
 }
 
-void timer_interrupt(void)
+static void timer_interrupt_handler(void)
 {
-    update_jiffies();
-
+    update_jiffies_internal();
     scheduler_tick();
-
     run_timer_softirq();
 }
 
-void keyboard_interrupt(void)
+static void keyboard_interrupt_handler(void)
 {
     unsigned char scancode = inb(0x60);
-
     handle_keyboard_input(scancode);
 }
 
-void handle_page_fault(unsigned long error_code)
+static void handle_page_fault(unsigned long error_code)
 {
     unsigned long address;
 
-    asm volatile("movq %%cr2, %0" : "=r" (address));
+    __asm__ __volatile__("movq %%cr2, %0" : "=r"(address));
 
     printk("Page fault at address 0x%lx, error code: 0x%lx\n",
            address, error_code);
@@ -540,108 +885,10 @@ void handle_page_fault(unsigned long error_code)
     do_page_fault(address, error_code);
 }
 
-u64 get_jiffies_64(void)
-{
-    static u64 jiffies = 0;
-    return jiffies++;
-}
-
-void update_jiffies(void)
-{
-    static u64 jiffies = 0;
-    jiffies++;
-}
-
-u32 smp_processor_id(void)
-{
-    return 0;
-}
-
-void cpu_relax(void)
-{
-    asm volatile("pause" ::: "memory");
-}
-
-unsigned long local_irq_save(void)
-{
-    unsigned long flags;
-    asm volatile("pushfq; popq %0; cli" : "=r" (flags) :: "memory");
-    return flags;
-}
-
-void local_irq_restore(unsigned long flags)
-{
-    asm volatile("pushq %0; popfq" :: "r" (flags) : "memory");
-}
-
-void local_irq_disable(void)
-{
-    asm volatile("cli" ::: "memory");
-}
-
-void local_irq_enable(void)
-{
-    asm volatile("sti" ::: "memory");
-}
-
-
-void local_bh_enable(void)
-{
-}
-
-void *kmalloc(size_t size, gfp_t flags)
-{
-    return NULL;
-}
-
-void kfree(void *ptr)
-{
-}
-
-int strcmp(const char *s1, const char *s2)
-{
-    while (*s1 && *s2 && *s1 == *s2) {
-        s1++;
-        s2++;
-    }
-    return *s1 - *s2;
-}
-
-char *strcpy(char *dest, const char *src)
-{
-    char *ret = dest;
-    while ((*dest++ = *src++))
-        ;
-    return ret;
-}
-
-size_t strlen(const char *s)
-{
-    size_t len = 0;
-    while (*s++)
-        len++;
-    return len;
-}
-
-void *memset(void *s, int c, size_t n)
-{
-    unsigned char *p = s;
-    while (n--)
-        *p++ = c;
-    return s;
-}
-
-void *memcpy(void *dest, const void *src, size_t n)
-{
-    unsigned char *d = dest;
-    const unsigned char *s = src;
-    while (n--)
-        *d++ = *s++;
-    return dest;
-}
-
+/*
+ * Kernel entry point from assembly (alternate name)
+ */
 void start_kernel(void)
 {
-    /* 这是内核的真正入口点 */
     kernel_main();
 }

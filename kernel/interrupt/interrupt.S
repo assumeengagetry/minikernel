@@ -2,6 +2,12 @@
 # 这个文件包含了中断和异常处理的底层实现
 
 .text
+.code64
+
+# 常量定义
+.set ENOSYS, 38
+.set NR_syscalls, 256
+
 .global idt_flush
 .global isr_common_stub
 .global irq_common_stub
@@ -241,6 +247,9 @@ irq_common_stub:
 # 系统调用入口
 .global syscall_entry
 syscall_entry:
+    # 交换用户栈和内核栈
+    swapgs
+
     # 保存用户模式寄存器
     pushq %rbp
     pushq %rbx
@@ -262,17 +271,21 @@ syscall_entry:
     cmpq $NR_syscalls, %rax
     jae syscall_invalid
 
-    # 调用系统调用
-    movq %rax, %r11     # 保存系统调用号
-    movq %rdi, %rax     # 系统调用号
-    movq %rsi, %rdi     # arg0
-    movq %rdx, %rsi     # arg1
-    movq %r10, %rdx     # arg2
-    movq %r8, %r10      # arg3
-    movq %r9, %r8       # arg4
-    movq 8(%rsp), %r9   # arg5
+    # 准备参数调用 do_syscall
+    # do_syscall(syscall_nr, arg0, arg1, arg2, arg3, arg4, arg5)
+    movq %rax, %rdi     # syscall_nr
+    movq 48(%rsp), %rsi # arg0 (original rdi)
+    movq 40(%rsp), %rdx # arg1 (original rsi)
+    movq 32(%rsp), %rcx # arg2 (original rdx)
+    movq 24(%rsp), %r8  # arg3 (original r10)
+    movq 16(%rsp), %r9  # arg4 (original r8)
+    # arg5 需要通过栈传递
+    pushq 8(%rsp)       # arg5 (original r9)
 
     call do_syscall
+
+    # 清理栈上的 arg5
+    addq $8, %rsp
 
     # 恢复栈
     addq $56, %rsp
@@ -285,12 +298,15 @@ syscall_entry:
     popq %rbx
     popq %rbp
 
+    # 恢复用户GS
+    swapgs
+
     # 返回用户空间
     sysretq
 
 syscall_invalid:
-    # 无效系统调用
-    movq $-ENOSYS, %rax
+    # 无效系统调用，返回 -ENOSYS
+    movq $-38, %rax     # -ENOSYS = -38
     addq $56, %rsp
     popq %r15
     popq %r14
@@ -298,6 +314,7 @@ syscall_invalid:
     popq %r12
     popq %rbx
     popq %rbp
+    swapgs
     sysretq
 
 # 页错误处理
@@ -321,10 +338,10 @@ page_fault_handler:
     pushq %r15
 
     # 获取页错误地址
-    movq %cr2, %rsi
+    movq %cr2, %rdi
 
-    # 获取错误码
-    movq 120(%rsp), %rdx
+    # 获取错误码 (在保存的寄存器之后)
+    movq 120(%rsp), %rsi
 
     # 调用页错误处理程序
     call do_page_fault
@@ -471,3 +488,29 @@ interrupts_enabled:
 .global interrupt_return
 interrupt_return:
     iretq
+
+# 默认中断/异常处理程序 (如果C代码未定义)
+.weak isr_handler
+isr_handler:
+    ret
+
+.weak irq_handler
+irq_handler:
+    ret
+
+.weak do_page_fault
+do_page_fault:
+    ret
+
+.weak timer_interrupt
+timer_interrupt:
+    ret
+
+.weak keyboard_interrupt
+keyboard_interrupt:
+    ret
+
+.weak do_syscall
+do_syscall:
+    movq $-38, %rax     # -ENOSYS
+    ret

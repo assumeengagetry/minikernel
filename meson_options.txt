@@ -1,0 +1,62 @@
+# MicroKernel Meson Build Options
+
+# 目标架构选择
+option('arch',
+    type : 'combo',
+    choices : ['x86_64'],
+    value : 'x86_64',
+    description : 'Target architecture for the kernel'
+)
+
+# 调试模式
+option('kernel_debug',
+    type : 'boolean',
+    value : true,
+    description : 'Enable kernel debugging features'
+)
+
+# 串口调试输出
+option('serial_debug',
+    type : 'boolean',
+    value : true,
+    description : 'Enable serial port debug output'
+)
+
+# 优化级别
+option('kernel_optimize',
+    type : 'combo',
+    choices : ['0', '1', '2', '3', 's'],
+    value : '2',
+    description : 'Kernel optimization level'
+)
+
+# 最大 CPU 数量
+option('max_cpus',
+    type : 'integer',
+    min : 1,
+    max : 256,
+    value : 8,
+    description : 'Maximum number of CPUs supported'
+)
+
+# 启用单元测试
+option('enable_tests',
+    type : 'boolean',
+    value : false,
+    description : 'Build kernel unit tests'
+)
+
+# 启用用户空间程序构建
+option('enable_userspace',
+    type : 'boolean',
+    value : false,
+    description : 'Build userspace programs'
+)
+
+# 内核日志级别
+option('log_level',
+    type : 'combo',
+    choices : ['none', 'error', 'warn', 'info', 'debug', 'trace'],
+    value : 'info',
+    description : 'Kernel logging verbosity level'
+)
