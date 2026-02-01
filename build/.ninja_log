@@ -1,9 +1,9 @@
 # ninja log v7
-1	11	1769985708025945459	kernel.elf.p/arch_x86_64_boot_boot.S.o	412a628a00b323bc
-2	13	1769985708026945386	kernel.elf.p/arch_x86_64_cpu_switch.S.o	3c4145f9290c500f
-2	13	1769985708026945386	kernel.elf.p/kernel_interrupt_interrupt.S.o	ceae54c505d3e6f1
-1	119	1769985708025945459	kernel.elf.p/kernel_mm_buddy.c.o	49cc20883df65696
-0	148	1769985708024945532	kernel.elf.p/src_kernel_main.c.o	a7d07759bc119257
-1	203	1769985708025945459	kernel.elf.p/src_kernel_shell.c.o	4f2bfd8047a20573
-203	212	1769985708227930688	kernel.elf	700cad8bc106c2c7
-212	215	1769985708239929811	kernel.bin	434b5e788999bcf3
+2	19	1769988065003166702	kernel.elf.p/arch_x86_64_boot_boot.S.o	f64edeb57ed06859
+3	19	1769988065004166714	kernel.elf.p/arch_x86_64_cpu_switch.S.o	6e437f651e38027b
+3	19	1769988065004166714	kernel.elf.p/kernel_interrupt_interrupt.S.o	9c2c52e5c747e14
+2	116	1769988065003166702	kernel.elf.p/kernel_mm_buddy.c.o	ad8c1f0615befa54
+1	150	1769988065002166691	kernel.elf.p/src_kernel_main.c.o	9d3aeaaa27cae21c
+1	200	1769988065002166691	kernel.elf.p/src_kernel_shell.c.o	2fea23f7a39083e9
+200	209	1769988065201168928	kernel.elf	700cad8bc106c2c7
+209	212	1769988065212169051	kernel.bin	434b5e788999bcf3

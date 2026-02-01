@@ -70,7 +70,6 @@ kernel_link_args = [
 # 头文件路径
 # =============================================================================
 kernel_inc = include_directories(
-    'include',
     'kernel/include',
 )
 

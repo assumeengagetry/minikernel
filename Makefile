@@ -10,7 +10,7 @@ CFLAGS := -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 CFLAGS += -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow
 CFLAGS += -m64 -mcmodel=kernel -fno-pic -fno-pie
 CFLAGS += -Wall -Wextra -Werror -O2 -g
-CFLAGS += -Iinclude -std=gnu99
+CFLAGS += -Ikernel/include -std=gnu99
 
 LDFLAGS := -nostdlib -static -Wl,--build-id=none
 LDFLAGS += -Wl,-z,max-page-size=0x1000 -Wl,-z,common-page-size=0x1000
@@ -18,7 +18,7 @@ LDFLAGS += -Wl,-z,max-page-size=0x1000 -Wl,-z,common-page-size=0x1000
 ASFLAGS := -f elf64
 
 SRCDIR := src
-INCDIR := include
+INCDIR := kernel/include
 OBJDIR := obj
 BINDIR := bin
 ARCHDIR := arch/$(ARCH)

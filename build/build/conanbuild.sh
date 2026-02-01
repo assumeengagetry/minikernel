@@ -1,1 +1,0 @@
-. "/home/assumeengage/Kernal/build/build/conanbuildenv-release-x86_64.sh"

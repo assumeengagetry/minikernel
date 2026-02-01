@@ -1,6 +1,9 @@
 # x86_64 中断处理汇编代码
 # 这个文件包含了中断和异常处理的底层实现
 
+# Mark stack as non-executable (fix linker warning)
+.section .note.GNU-stack,"",@progbits
+
 .text
 .code64
 

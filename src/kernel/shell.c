@@ -97,17 +97,6 @@ static int shell_strcmp(const char *s1, const char *s2)
     return *(unsigned char *)s1 - *(unsigned char *)s2;
 }
 
-static int shell_strncmp(const char *s1, const char *s2, size_t n)
-{
-    while (n && *s1 && (*s1 == *s2)) {
-        s1++;
-        s2++;
-        n--;
-    }
-    if (n == 0) return 0;
-    return *(unsigned char *)s1 - *(unsigned char *)s2;
-}
-
 static char *shell_strcpy(char *dest, const char *src)
 {
     char *d = dest;
@@ -286,14 +275,6 @@ static void serial_init(void)
 static int serial_received(void)
 {
     return inb(SERIAL_LSR) & 0x01;
-}
-
-static char serial_getchar(void)
-{
-    while (!serial_received()) {
-        __asm__ __volatile__("pause");
-    }
-    return inb(SERIAL_DATA);
 }
 
 static int serial_try_getchar(void)
@@ -856,7 +837,7 @@ static void shell_handle_char(char c)
 {
     /* Handle escape sequences */
     static int escape_state = 0;
-    static char escape_buf[8];
+    static char escape_buf[8] __attribute__((unused));
     static int escape_pos = 0;
     
     if (escape_state > 0) {

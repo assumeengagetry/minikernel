@@ -335,28 +335,17 @@
     "description": "Maximum number of linker processes to run or 0 for no limit"
   },
   {
-    "name": "b_lundef",
-    "value": true,
+    "name": "b_ndebug",
+    "value": "false",
     "section": "base",
     "machine": "any",
-    "type": "boolean",
-    "description": "Use -Wl,--no-undefined when linking"
-  },
-  {
-    "name": "b_lto",
-    "value": false,
-    "section": "base",
-    "machine": "any",
-    "type": "boolean",
-    "description": "Use link time optimization"
-  },
-  {
-    "name": "b_sanitize",
-    "value": [],
-    "section": "base",
-    "machine": "any",
-    "type": "array",
-    "description": "Code sanitizer to use"
+    "choices": [
+      "true",
+      "false",
+      "if-release"
+    ],
+    "type": "combo",
+    "description": "Disable asserts"
   },
   {
     "name": "b_asneeded",
@@ -367,41 +356,12 @@
     "description": "Use -Wl,--as-needed when linking"
   },
   {
-    "name": "b_staticpic",
-    "value": false,
+    "name": "b_sanitize",
+    "value": [],
     "section": "base",
     "machine": "any",
-    "type": "boolean",
-    "description": "Build static libraries as position independent"
-  },
-  {
-    "name": "b_pgo",
-    "value": "off",
-    "section": "base",
-    "machine": "any",
-    "choices": [
-      "off",
-      "generate",
-      "use"
-    ],
-    "type": "combo",
-    "description": "Use profile guided optimization"
-  },
-  {
-    "name": "b_pie",
-    "value": false,
-    "section": "base",
-    "machine": "any",
-    "type": "boolean",
-    "description": "Build executables as position independent"
-  },
-  {
-    "name": "b_thinlto_cache_dir",
-    "value": "",
-    "section": "base",
-    "machine": "any",
-    "type": "string",
-    "description": "Directory to store ThinLTO cache objects"
+    "type": "array",
+    "description": "Code sanitizer to use"
   },
   {
     "name": "b_coverage",
@@ -410,6 +370,14 @@
     "machine": "any",
     "type": "boolean",
     "description": "Enable coverage tracking."
+  },
+  {
+    "name": "b_thinlto_cache_dir",
+    "value": "",
+    "section": "base",
+    "machine": "any",
+    "type": "string",
+    "description": "Directory to store ThinLTO cache objects"
   },
   {
     "name": "b_colorout",
@@ -433,25 +401,57 @@
     "description": "Use LLVM ThinLTO caching for faster incremental builds"
   },
   {
-    "name": "b_ndebug",
-    "value": "false",
-    "section": "base",
-    "machine": "any",
-    "choices": [
-      "true",
-      "false",
-      "if-release"
-    ],
-    "type": "combo",
-    "description": "Disable asserts"
-  },
-  {
     "name": "b_pch",
     "value": true,
     "section": "base",
     "machine": "any",
     "type": "boolean",
     "description": "Use precompiled headers"
+  },
+  {
+    "name": "b_pgo",
+    "value": "off",
+    "section": "base",
+    "machine": "any",
+    "choices": [
+      "off",
+      "generate",
+      "use"
+    ],
+    "type": "combo",
+    "description": "Use profile guided optimization"
+  },
+  {
+    "name": "b_pie",
+    "value": false,
+    "section": "base",
+    "machine": "any",
+    "type": "boolean",
+    "description": "Build executables as position independent"
+  },
+  {
+    "name": "b_lundef",
+    "value": true,
+    "section": "base",
+    "machine": "any",
+    "type": "boolean",
+    "description": "Use -Wl,--no-undefined when linking"
+  },
+  {
+    "name": "b_staticpic",
+    "value": false,
+    "section": "base",
+    "machine": "any",
+    "type": "boolean",
+    "description": "Build static libraries as position independent"
+  },
+  {
+    "name": "b_lto",
+    "value": false,
+    "section": "base",
+    "machine": "any",
+    "type": "boolean",
+    "description": "Use link time optimization"
   },
   {
     "name": "b_lto_threads",

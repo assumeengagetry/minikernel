@@ -33,6 +33,6 @@ microkernel 0.1.0
     QEMU        : /usr/local/bin/qemu-system-x86_64
 
   User defined options
-    Cross files : ../cross/x86_64-none.ini
+    Cross files : /home/assumeengage/Kernal/cross/x86_64-none.ini
 
 Found ninja-1.13.2 at /usr/local/bin/ninja

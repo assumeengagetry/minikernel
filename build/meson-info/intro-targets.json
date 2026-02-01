@@ -19,7 +19,6 @@
           "-I/home/assumeengage/Kernal/build/kernel.elf.p",
           "-I/home/assumeengage/Kernal/build",
           "-I/home/assumeengage/Kernal",
-          "-I/home/assumeengage/Kernal/include",
           "-I/home/assumeengage/Kernal/kernel/include",
           "-fdiagnostics-color=always",
           "-D_FILE_OFFSET_BITS=64",

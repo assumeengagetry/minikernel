@@ -1,6 +1,9 @@
 # x86_64 上下文切换汇编代码
 # 这个文件包含了进程/线程上下文切换的底层实现
 
+# Mark stack as non-executable (fix linker warning)
+.section .note.GNU-stack,"",@progbits
+
 .text
 .global switch_to
 .global ret_from_fork

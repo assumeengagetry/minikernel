@@ -2,6 +2,9 @@
 # 这个文件包含了内核的引导入口点和初始化代码
 # 支持 Multiboot1 (QEMU -kernel) 和 Multiboot2 (GRUB2)
 
+# Mark stack as non-executable (fix linker warning)
+.section .note.GNU-stack,"",@progbits
+
 # =============================================================================
 # Multiboot1 头部 (用于 QEMU -kernel 启动)
 # =============================================================================
