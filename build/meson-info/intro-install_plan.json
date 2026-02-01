@@ -1,0 +1,18 @@
+{
+  "targets": {
+    "/home/assumeengage/Kernal/build/kernel.elf": {
+      "destination": "{prefix}/boot/kernel.elf",
+      "tag": "runtime",
+      "subproject": null,
+      "install_rpath": null,
+      "build_rpaths": []
+    },
+    "/home/assumeengage/Kernal/build/kernel.bin": {
+      "destination": "{prefix}/boot/kernel.bin",
+      "tag": null,
+      "subproject": null,
+      "install_rpath": null,
+      "build_rpaths": []
+    }
+  }
+}

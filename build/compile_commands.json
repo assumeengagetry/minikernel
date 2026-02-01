@@ -1,0 +1,38 @@
+[
+  {
+    "directory": "/home/assumeengage/Kernal/build",
+    "command": "gcc -Ikernel.elf.p -I. -I.. -I../include -I../kernel/include -fdiagnostics-color=always -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=gnu99 -O2 -g -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -Wno-pedantic -Wno-unused-parameter -Wno-unused-variable -Wno-missing-prototypes -Wno-implicit-function-declaration -MD -MQ kernel.elf.p/src_kernel_main.c.o -MF kernel.elf.p/src_kernel_main.c.o.d -o kernel.elf.p/src_kernel_main.c.o -c ../src/kernel/main.c",
+    "file": "../src/kernel/main.c",
+    "output": "kernel.elf.p/src_kernel_main.c.o"
+  },
+  {
+    "directory": "/home/assumeengage/Kernal/build",
+    "command": "gcc -Ikernel.elf.p -I. -I.. -I../include -I../kernel/include -fdiagnostics-color=always -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=gnu99 -O2 -g -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -Wno-pedantic -Wno-unused-parameter -Wno-unused-variable -Wno-missing-prototypes -Wno-implicit-function-declaration -MD -MQ kernel.elf.p/src_kernel_shell.c.o -MF kernel.elf.p/src_kernel_shell.c.o.d -o kernel.elf.p/src_kernel_shell.c.o -c ../src/kernel/shell.c",
+    "file": "../src/kernel/shell.c",
+    "output": "kernel.elf.p/src_kernel_shell.c.o"
+  },
+  {
+    "directory": "/home/assumeengage/Kernal/build",
+    "command": "gcc -Ikernel.elf.p -I. -I.. -I../include -I../kernel/include -fdiagnostics-color=always -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=gnu99 -O2 -g -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -Wno-pedantic -Wno-unused-parameter -Wno-unused-variable -Wno-missing-prototypes -Wno-implicit-function-declaration -MD -MQ kernel.elf.p/kernel_mm_buddy.c.o -MF kernel.elf.p/kernel_mm_buddy.c.o.d -o kernel.elf.p/kernel_mm_buddy.c.o -c ../kernel/mm/buddy.c",
+    "file": "../kernel/mm/buddy.c",
+    "output": "kernel.elf.p/kernel_mm_buddy.c.o"
+  },
+  {
+    "directory": "/home/assumeengage/Kernal/build",
+    "command": "gcc -Ikernel.elf.p -I. -I.. -I../include -I../kernel/include -fdiagnostics-color=always -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=gnu99 -O2 -g -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -Wno-pedantic -Wno-unused-parameter -Wno-unused-variable -Wno-missing-prototypes -Wno-implicit-function-declaration -MD -MQ kernel.elf.p/arch_x86_64_boot_boot.S.o -MF kernel.elf.p/arch_x86_64_boot_boot.S.o.d -o kernel.elf.p/arch_x86_64_boot_boot.S.o -c ../arch/x86_64/boot/boot.S",
+    "file": "../arch/x86_64/boot/boot.S",
+    "output": "kernel.elf.p/arch_x86_64_boot_boot.S.o"
+  },
+  {
+    "directory": "/home/assumeengage/Kernal/build",
+    "command": "gcc -Ikernel.elf.p -I. -I.. -I../include -I../kernel/include -fdiagnostics-color=always -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=gnu99 -O2 -g -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -Wno-pedantic -Wno-unused-parameter -Wno-unused-variable -Wno-missing-prototypes -Wno-implicit-function-declaration -MD -MQ kernel.elf.p/arch_x86_64_cpu_switch.S.o -MF kernel.elf.p/arch_x86_64_cpu_switch.S.o.d -o kernel.elf.p/arch_x86_64_cpu_switch.S.o -c ../arch/x86_64/cpu/switch.S",
+    "file": "../arch/x86_64/cpu/switch.S",
+    "output": "kernel.elf.p/arch_x86_64_cpu_switch.S.o"
+  },
+  {
+    "directory": "/home/assumeengage/Kernal/build",
+    "command": "gcc -Ikernel.elf.p -I. -I.. -I../include -I../kernel/include -fdiagnostics-color=always -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=gnu99 -O2 -g -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -Wno-pedantic -Wno-unused-parameter -Wno-unused-variable -Wno-missing-prototypes -Wno-implicit-function-declaration -MD -MQ kernel.elf.p/kernel_interrupt_interrupt.S.o -MF kernel.elf.p/kernel_interrupt_interrupt.S.o.d -o kernel.elf.p/kernel_interrupt_interrupt.S.o -c ../kernel/interrupt/interrupt.S",
+    "file": "../kernel/interrupt/interrupt.S",
+    "output": "kernel.elf.p/kernel_interrupt_interrupt.S.o"
+  }
+]

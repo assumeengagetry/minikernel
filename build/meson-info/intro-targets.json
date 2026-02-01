@@ -1,0 +1,244 @@
+[
+  {
+    "name": "kernel.elf",
+    "id": "kernel.elf@exe",
+    "type": "executable",
+    "defined_in": "/home/assumeengage/Kernal/meson.build",
+    "filename": [
+      "/home/assumeengage/Kernal/build/kernel.elf"
+    ],
+    "build_by_default": true,
+    "target_sources": [
+      {
+        "language": "c",
+        "machine": "host",
+        "compiler": [
+          "gcc"
+        ],
+        "parameters": [
+          "-I/home/assumeengage/Kernal/build/kernel.elf.p",
+          "-I/home/assumeengage/Kernal/build",
+          "-I/home/assumeengage/Kernal",
+          "-I/home/assumeengage/Kernal/include",
+          "-I/home/assumeengage/Kernal/kernel/include",
+          "-fdiagnostics-color=always",
+          "-D_FILE_OFFSET_BITS=64",
+          "-Wall",
+          "-Winvalid-pch",
+          "-Wextra",
+          "-std=gnu99",
+          "-O2",
+          "-g",
+          "-ffreestanding",
+          "-nostdlib",
+          "-nostdinc",
+          "-fno-builtin",
+          "-fno-stack-protector",
+          "-mno-red-zone",
+          "-mno-mmx",
+          "-mno-sse",
+          "-mno-sse2",
+          "-mno-sse3",
+          "-mno-3dnow",
+          "-m64",
+          "-mcmodel=kernel",
+          "-fno-pic",
+          "-fno-pie",
+          "-ffreestanding",
+          "-nostdlib",
+          "-nostdinc",
+          "-fno-builtin",
+          "-fno-stack-protector",
+          "-mno-red-zone",
+          "-mno-mmx",
+          "-mno-sse",
+          "-mno-sse2",
+          "-mno-sse3",
+          "-mno-3dnow",
+          "-m64",
+          "-mcmodel=kernel",
+          "-fno-pic",
+          "-fno-pie",
+          "-Wno-pedantic",
+          "-Wno-unused-parameter",
+          "-Wno-unused-variable",
+          "-Wno-missing-prototypes",
+          "-Wno-implicit-function-declaration"
+        ],
+        "sources": [
+          "/home/assumeengage/Kernal/src/kernel/main.c",
+          "/home/assumeengage/Kernal/src/kernel/shell.c",
+          "/home/assumeengage/Kernal/kernel/mm/buddy.c",
+          "/home/assumeengage/Kernal/arch/x86_64/boot/boot.S",
+          "/home/assumeengage/Kernal/arch/x86_64/cpu/switch.S",
+          "/home/assumeengage/Kernal/kernel/interrupt/interrupt.S"
+        ],
+        "generated_sources": [],
+        "unity_sources": []
+      },
+      {
+        "linker": [
+          "gcc"
+        ],
+        "parameters": [
+          "-Wl,--as-needed",
+          "-Wl,--no-undefined",
+          "-nostdlib",
+          "-static",
+          "-Wl,--build-id=none",
+          "-Wl,-z,max-page-size=0x1000",
+          "-Wl,-z,common-page-size=0x1000",
+          "-nostdlib",
+          "-static",
+          "-Wl,--build-id=none",
+          "-Wl,-z,max-page-size=0x1000",
+          "-Wl,-z,common-page-size=0x1000",
+          "-T",
+          "/home/assumeengage/Kernal/arch/x86_64/boot/kernel.ld"
+        ]
+      }
+    ],
+    "extra_files": [],
+    "subproject": null,
+    "dependencies": [],
+    "depends": [],
+    "win_subsystem": "console",
+    "installed": true,
+    "install_filename": [
+      "/usr/local/boot/kernel.elf"
+    ]
+  },
+  {
+    "name": "kernel.bin",
+    "id": "kernel.bin@cus",
+    "type": "custom",
+    "defined_in": "/home/assumeengage/Kernal/meson.build",
+    "filename": [
+      "/home/assumeengage/Kernal/build/kernel.bin"
+    ],
+    "build_by_default": true,
+    "target_sources": [
+      {
+        "language": "unknown",
+        "compiler": [
+          "/usr/bin/objcopy",
+          "-O",
+          "binary",
+          "@INPUT@",
+          "@OUTPUT@"
+        ],
+        "parameters": [],
+        "sources": [
+          "/home/assumeengage/Kernal/build/kernel.elf"
+        ],
+        "generated_sources": []
+      }
+    ],
+    "extra_files": [],
+    "subproject": null,
+    "dependencies": [],
+    "depends": [],
+    "installed": true,
+    "install_filename": [
+      "/usr/local/boot/kernel.bin"
+    ]
+  },
+  {
+    "name": "kernel.dis",
+    "id": "kernel.dis@cus",
+    "type": "custom",
+    "defined_in": "/home/assumeengage/Kernal/meson.build",
+    "filename": [
+      "/home/assumeengage/Kernal/build/kernel.dis"
+    ],
+    "build_by_default": false,
+    "target_sources": [
+      {
+        "language": "unknown",
+        "compiler": [
+          "/usr/bin/objdump",
+          "-d",
+          "@INPUT@"
+        ],
+        "parameters": [],
+        "sources": [
+          "/home/assumeengage/Kernal/build/kernel.elf"
+        ],
+        "generated_sources": []
+      }
+    ],
+    "extra_files": [],
+    "subproject": null,
+    "dependencies": [],
+    "depends": [],
+    "installed": false
+  },
+  {
+    "name": "kernel.sym",
+    "id": "kernel.sym@cus",
+    "type": "custom",
+    "defined_in": "/home/assumeengage/Kernal/meson.build",
+    "filename": [
+      "/home/assumeengage/Kernal/build/kernel.sym"
+    ],
+    "build_by_default": false,
+    "target_sources": [
+      {
+        "language": "unknown",
+        "compiler": [
+          "/usr/bin/objdump",
+          "-t",
+          "@INPUT@"
+        ],
+        "parameters": [],
+        "sources": [
+          "/home/assumeengage/Kernal/build/kernel.elf"
+        ],
+        "generated_sources": []
+      }
+    ],
+    "extra_files": [],
+    "subproject": null,
+    "dependencies": [],
+    "depends": [],
+    "installed": false
+  },
+  {
+    "name": "qemu",
+    "id": "qemu@run",
+    "type": "run",
+    "defined_in": "/home/assumeengage/Kernal/meson.build",
+    "filename": [
+      "/home/assumeengage/Kernal/build/qemu"
+    ],
+    "build_by_default": false,
+    "target_sources": [],
+    "extra_files": [],
+    "subproject": null,
+    "dependencies": [],
+    "depends": [
+      "kernel.bin@cus",
+      "kernel.bin@cus"
+    ],
+    "installed": false
+  },
+  {
+    "name": "debug",
+    "id": "debug@run",
+    "type": "run",
+    "defined_in": "/home/assumeengage/Kernal/meson.build",
+    "filename": [
+      "/home/assumeengage/Kernal/build/debug"
+    ],
+    "build_by_default": false,
+    "target_sources": [],
+    "extra_files": [],
+    "subproject": null,
+    "dependencies": [],
+    "depends": [
+      "kernel.elf@exe",
+      "kernel.elf@exe"
+    ],
+    "installed": false
+  }
+]
