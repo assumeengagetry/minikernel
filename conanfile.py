@@ -1,7 +1,7 @@
 from conan import ConanFile
+from conan.errors import ConanInvalidConfiguration
 from conan.tools.meson import Meson, MesonToolchain
 from conan.tools.files import copy
-from conan.tools.layout import basic_layout
 import os
 
 
@@ -45,13 +45,13 @@ class MicroKernelConan(ConanFile):
     exports_sources = (
         "meson.build",
         "meson_options.txt",
-        "src/*",
-        "kernel/*",
-        "arch/*",
-        "include/*",
-        "user/*",
-        "tests/*",
-        "scripts/*",
+        "src/**",
+        "kernel/**",
+        "arch/**",
+        "include/**",
+        "user/**",
+        "tests/**",
+        "scripts/**",
     )
 
     def requirements(self):
@@ -69,18 +69,8 @@ class MicroKernelConan(ConanFile):
         """
         构建时依赖
         """
-        # Meson 构建系统
         self.tool_requires("meson/1.3.0")
-        # Ninja 构建后端
         self.tool_requires("ninja/1.13.2")
-
-    def configure(self):
-        """
-        配置构建选项
-        """
-        # 内核使用纯 C，删除 C++ 相关设置
-        del self.settings.compiler.libcxx
-        del self.settings.compiler.cppstd
 
     def layout(self):
         """
@@ -130,31 +120,18 @@ class MicroKernelConan(ConanFile):
 
 [binaries]
 c = 'gcc'
+cpp = 'g++'
 ar = 'ar'
 strip = 'strip'
 ld = 'ld'
+objcopy = 'objcopy'
+objdump = 'objdump'
 
 [built-in options]
-c_args = [
-    '-ffreestanding',
-    '-nostdlib',
-    '-nostdinc',
-    '-fno-builtin',
-    '-fno-stack-protector',
-    '-mno-red-zone',
-    '-mno-mmx',
-    '-mno-sse',
-    '-mno-sse2',
-    '-m64',
-    '-mcmodel=kernel',
-    '-fno-pic'
-]
-
-c_link_args = [
-    '-nostdlib',
-    '-static',
-    '-Wl,--build-id=none'
-]
+c_args = ['-ffreestanding', '-nostdlib', '-nostdinc', '-fno-builtin', '-fno-stack-protector', '-mno-red-zone', '-mno-mmx', '-mno-sse', '-mno-sse2', '-m64', '-mcmodel=kernel', '-fno-pic']
+cpp_args = ['-ffreestanding', '-nostdlib', '-nostdinc', '-nostdinc++', '-fno-builtin', '-fno-stack-protector', '-fno-exceptions', '-fno-rtti', '-fno-threadsafe-statics', '-fno-use-cxa-atexit', '-mno-red-zone', '-mno-mmx', '-mno-sse', '-mno-sse2', '-m64', '-mcmodel=kernel', '-fno-pic']
+c_link_args = ['-nostdlib', '-static', '-Wl,--build-id=none']
+cpp_link_args = ['-nostdlib', '-static', '-Wl,--build-id=none']
 
 [host_machine]
 system = 'none'
@@ -162,7 +139,7 @@ cpu_family = 'x86_64'
 cpu = 'x86_64'
 endian = 'little'
 """
-        cross_file_path = os.path.join(self.generators_folder, "cross_x86_64.ini")
+        cross_file_path = os.path.join(self.generators_folder, MesonToolchain.cross_filename)
         with open(cross_file_path, "w") as f:
             f.write(cross_file_content)
 

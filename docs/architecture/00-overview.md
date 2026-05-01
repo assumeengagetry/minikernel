@@ -178,7 +178,7 @@ minikernel/
 - 4级页表虚拟地址映射
 - 内存区域管理（DMA、Normal、HighMem）
 
-**相关文件**：`kernel/mm/buddy.c`, `kernel/include/mm.h`
+**相关文件**：`kernel/mm/buddy.cpp`, `kernel/include/mm.h`
 
 ### 4.3 进程调度 (Scheduler)
 

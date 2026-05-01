@@ -7,6 +7,8 @@
 #include "../../kernel/include/types.h"
 #include "../../kernel/include/mm.h"
 
+extern "C" {
+
 /* ===========================================================================
  * Constants
  * ===========================================================================*/
@@ -1029,4 +1031,6 @@ void shell_run(void)
 void shell_input_char(char c)
 {
     shell_handle_char(c);
+}
+
 }

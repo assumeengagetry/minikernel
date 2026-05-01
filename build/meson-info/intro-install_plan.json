@@ -1,0 +1,25 @@
+{
+  "targets": {
+    "/home/assumeengage/OS_homework/minikernel/build/kernel.elf": {
+      "destination": "{prefix}/boot/kernel.elf",
+      "tag": "runtime",
+      "subproject": null,
+      "install_rpath": null,
+      "build_rpaths": []
+    },
+    "/home/assumeengage/OS_homework/minikernel/build/kernel.bin": {
+      "destination": "{prefix}/boot/kernel.bin",
+      "tag": null,
+      "subproject": null,
+      "install_rpath": null,
+      "build_rpaths": []
+    },
+    "/home/assumeengage/OS_homework/minikernel/build/kernel.iso": {
+      "destination": "{prefix}/boot/kernel.iso",
+      "tag": null,
+      "subproject": null,
+      "install_rpath": null,
+      "build_rpaths": []
+    }
+  }
+}

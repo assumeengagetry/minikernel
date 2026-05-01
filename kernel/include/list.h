@@ -104,14 +104,14 @@ static inline int list_is_head(const struct list_head *list,
 /*
  * Internal list manipulation functions
  */
-static inline void __list_add(struct list_head *new,
+static inline void __list_add(struct list_head *node,
                               struct list_head *prev,
                               struct list_head *next)
 {
-    next->prev = new;
-    new->next = next;
-    new->prev = prev;
-    prev->next = new;
+    next->prev = node;
+    node->next = next;
+    node->prev = prev;
+    prev->next = node;
 }
 
 static inline void __list_del(struct list_head *prev, struct list_head *next)
@@ -128,14 +128,14 @@ static inline void __list_del_entry(struct list_head *entry)
 /*
  * List manipulation functions
  */
-static inline void list_add(struct list_head *new, struct list_head *head)
+static inline void list_add(struct list_head *node, struct list_head *head)
 {
-    __list_add(new, head, head->next);
+    __list_add(node, head, head->next);
 }
 
-static inline void list_add_tail(struct list_head *new, struct list_head *head)
+static inline void list_add_tail(struct list_head *node, struct list_head *head)
 {
-    __list_add(new, head->prev, head);
+    __list_add(node, head->prev, head);
 }
 
 #define LIST_POISON1 ((void *)0x00100100)
@@ -154,18 +154,18 @@ static inline void list_del_init(struct list_head *entry)
     INIT_LIST_HEAD(entry);
 }
 
-static inline void list_replace(struct list_head *old, struct list_head *new)
+static inline void list_replace(struct list_head *old, struct list_head *node)
 {
-    new->next = old->next;
-    new->next->prev = new;
-    new->prev = old->prev;
-    new->prev->next = new;
+    node->next = old->next;
+    node->next->prev = node;
+    node->prev = old->prev;
+    node->prev->next = node;
 }
 
 static inline void list_replace_init(struct list_head *old,
-                                     struct list_head *new)
+                                     struct list_head *node)
 {
-    list_replace(old, new);
+    list_replace(old, node);
     INIT_LIST_HEAD(old);
 }
 
@@ -471,11 +471,11 @@ static inline bool hlist_is_singular_node(struct hlist_node *n,
 }
 
 static inline void hlist_move_list(struct hlist_head *old,
-                                   struct hlist_head *new)
+                                   struct hlist_head *node)
 {
-    new->first = old->first;
-    if (new->first)
-        new->first->pprev = &new->first;
+    node->first = old->first;
+    if (node->first)
+        node->first->pprev = &node->first;
     old->first = NULL;
 }
 

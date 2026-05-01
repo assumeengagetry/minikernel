@@ -9,6 +9,10 @@
 
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Initialize and run the shell
  * This function enters an infinite loop and does not return
@@ -27,5 +31,9 @@ void shell_run(void);
  * @param c: The character to process
  */
 void shell_input_char(char c);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _KERNEL_SHELL_H */

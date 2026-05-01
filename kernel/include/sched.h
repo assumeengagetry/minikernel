@@ -424,7 +424,7 @@ typedef struct wait_queue_head {
 
 typedef struct wait_queue_entry {
     unsigned int flags;
-    void *private;
+    void *private_data;
     int (*func)(struct wait_queue_entry *wq, unsigned mode, int flags, void *key);
     struct list_head entry;
 } wait_queue_entry_t;
@@ -437,7 +437,16 @@ typedef struct wait_queue_entry {
 /*
  * Current task pointer
  */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern struct task_struct *current_task;
+
+#ifdef __cplusplus
+}
+#endif
+
 #define current (current_task)
 
 #define get_current() (current_task)
@@ -453,6 +462,10 @@ extern struct task_struct *current_task;
 /*
  * Function declarations
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Scheduler initialization */
 void sched_init(void);
@@ -517,6 +530,11 @@ struct rq {
 
 /* Per-CPU run queue */
 extern struct rq runqueues[];
+
+#ifdef __cplusplus
+}
+#endif
+
 #define cpu_rq(cpu) (&runqueues[(cpu)])
 #define this_rq()   cpu_rq(0)
 

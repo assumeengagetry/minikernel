@@ -1,0 +1,1 @@
+. "/home/assumeengage/OS_homework/minikernel/build-conan/build/deactivate_conanrunenv-release-x86_64.sh"

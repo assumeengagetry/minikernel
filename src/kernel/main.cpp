@@ -11,6 +11,8 @@
 #include "../../kernel/include/spinlock.h"
 #include "../../kernel/include/shell.h"
 
+extern "C" {
+
 /* Kernel version information */
 #define KERNEL_VERSION "0.1.0"
 #define KERNEL_NAME "MicroKernel"
@@ -710,6 +712,7 @@ long sys_uname(struct utsname __user *name)
 {
     struct utsname kernel_info;
 
+    memset(&kernel_info, 0, sizeof(kernel_info));
     strcpy(kernel_info.sysname, "MicroKernel");
     strcpy(kernel_info.nodename, "localhost");
     strcpy(kernel_info.release, KERNEL_VERSION);
@@ -892,4 +895,6 @@ static void handle_page_fault(unsigned long error_code)
 void start_kernel(void)
 {
     kernel_main();
+}
+
 }

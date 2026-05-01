@@ -27,7 +27,7 @@ MiniKernel 的启动过程从 BIOS/UEFI 开始，经过引导加载器（如 GRU
 **关键文件**：
 - `arch/x86_64/boot/boot.S` - 汇编引导代码
 - `arch/x86_64/boot/kernel.ld` - 链接脚本
-- `src/kernel/main.c` - 内核主函数
+- `src/kernel/main.cpp` - 内核主函数
 
 ---
 

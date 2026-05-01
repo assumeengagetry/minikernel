@@ -1,0 +1,46 @@
+The Meson build system
+Version: 1.11.1
+Source dir: /home/assumeengage/OS_homework/minikernel
+Build dir: /home/assumeengage/OS_homework/minikernel/build
+Build type: cross build
+Project name: microkernel
+Project version: 0.1.0
+C compiler for the host machine: gcc (gcc 15.2.1 "gcc (GCC) 15.2.1 20260209")
+C linker for the host machine: gcc ld.bfd 2.46
+C++ compiler for the host machine: g++ (gcc 15.2.1 "g++ (GCC) 15.2.1 20260209")
+C++ linker for the host machine: g++ ld.bfd 2.46
+C compiler for the build machine: cc (gcc 15.2.1 "cc (GCC) 15.2.1 20260209")
+C linker for the build machine: cc ld.bfd 2.46
+C++ compiler for the build machine: c++ (gcc 15.2.1 "c++ (GCC) 15.2.1 20260209")
+C++ linker for the build machine: c++ ld.bfd 2.46
+Build machine cpu family: x86_64
+Build machine cpu: x86_64
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Target machine cpu family: x86_64
+Target machine cpu: x86_64
+Message: Building for architecture: x86_64
+Program objcopy found: YES
+Program objdump found: YES
+Program sh found: YES (/usr/bin/sh)
+Program qemu-system-x86_64 found: YES (/usr/bin/qemu-system-x86_64)
+Program grub-mkrescue found: YES (/usr/bin/grub-mkrescue)
+Program xorriso found: YES (/usr/bin/xorriso)
+Build targets in project: 7
+
+microkernel 0.1.0
+
+  Build Configuration
+    Architecture : x86_64
+    Kernel Name  : MicroKernel
+    Version      : 0.1.0
+    C Compiler   : gcc 15.2.1
+    C++ Compiler : gcc 15.2.1
+    QEMU         : /usr/bin/qemu-system-x86_64
+    grub-mkrescue: /usr/bin/grub-mkrescue
+    xorriso      : /usr/bin/xorriso
+
+  User defined options
+    Cross files  : /home/assumeengage/OS_homework/minikernel/cross/x86_64-none.ini
+
+Found ninja-1.13.2 at /usr/bin/ninja

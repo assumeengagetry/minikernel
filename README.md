@@ -55,11 +55,13 @@ minikernel OS 是一个从零开始构建的微内核操作系统项目，遵循
 
 | 工具 | 最低版本 | 用途 |
 |------|----------|------|
-| GCC | 9.0+ | C 编译器 |
-| NASM | 2.14+ | 汇编器 |
+| GCC/G++ | 9.0+ | C/C++ 编译器 |
+| Meson | 1.0+ | 构建系统 |
+| Ninja | 1.10+ | 构建后端 |
 | Binutils | 2.34+ | 链接器、objcopy、objdump |
 | QEMU | 4.0+ | 虚拟机运行环境 |
 | Make | 4.0+ | 构建工具 |
+| Conan | 2.0+ | 可选构建工具依赖管理 |
 
 ### 安装依赖
 
@@ -67,19 +69,19 @@ minikernel OS 是一个从零开始构建的微内核操作系统项目，遵循
 
 ```bash
 sudo apt update
-sudo apt install build-essential gcc nasm binutils qemu-system-x86
+sudo apt install build-essential gcc g++ meson ninja-build binutils qemu-system-x86
 ```
 
 **Arch Linux:**
 
 ```bash
-sudo pacman -S base-devel gcc nasm qemu-system-x86
+sudo pacman -S base-devel gcc meson ninja qemu-system-x86
 ```
 
 **Fedora:**
 
 ```bash
-sudo dnf install gcc nasm binutils qemu-system-x86
+sudo dnf install gcc gcc-c++ meson ninja-build binutils qemu-system-x86
 ```
 
 ### 构建与运行
@@ -92,10 +94,10 @@ cd minikernel
 # 检查工具链
 make check-tools
 
-# 构建内核
+# 使用 Meson 构建内核
 make all
 
-# 在 QEMU 中运行
+# 在 QEMU 中运行（需要 grub-mkrescue 和 xorriso）
 make qemu
 ```
 
@@ -106,7 +108,7 @@ make qemu
 make debug
 
 # 在另一个终端中连接 GDB
-gdb bin/kernel.elf -ex 'target remote localhost:1234'
+gdb build/kernel.elf -ex 'target remote localhost:1234'
 ```
 
 ## 🏗️ 架构设计
@@ -230,39 +232,34 @@ minikernel/
 
 ## 🛠️ 构建指南
 
-### 使用 Makefile (推荐)
+### 使用 Meson (推荐)
+
+```bash
+# 配置 bare-metal 交叉构建
+meson setup build --cross-file=cross/x86_64-none.ini
+
+# 编译 kernel.elf 和 kernel.bin
+meson compile -C build
+```
+
+### 使用 Conan + Meson
+
+```bash
+# Conan 安装 Meson/Ninja 并调用 Meson cross build
+conan build . --output-folder=build-conan
+```
+
+### 使用 Makefile 包装命令
 
 ```bash
 # 完整构建
 make all
-
-# 仅编译内核 ELF
-make bin/kernel.elf
-
-# 生成二进制镜像
-make bin/kernel.bin
-
-# 生成 ISO 镜像 (需要 grub-mkrescue)
-make bin/kernel.iso
 
 # 清理构建产物
 make clean
 
 # 深度清理
 make distclean
-```
-
-### 使用 Meson + Conan
-
-```bash
-# 安装依赖
-conan install . --output-folder=build --build=missing
-
-# 配置
-meson setup build --cross-file=cross/x86_64-none.ini
-
-# 编译
-meson compile -C build
 ```
 
 ### 构建选项
@@ -278,7 +275,7 @@ meson compile -C build
 ### 常用命令
 
 ```bash
-# 在 QEMU 中运行
+# 在 QEMU 中运行（需要 grub-mkrescue 和 xorriso）
 make qemu
 
 # 调试模式运行
@@ -292,9 +289,6 @@ make symbols
 
 # 查看内核大小
 make size
-
-# 代码统计
-make stats
 
 # 显示配置
 make config

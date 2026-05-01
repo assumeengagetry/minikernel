@@ -1,11 +1,12 @@
 # MicroKernel - Meson Build System
 # 使用 Meson 和 Conan 重构的内核构建系统
 
-project('microkernel', 'c',
+project('microkernel', ['c', 'cpp'],
     version : '0.1.0',
     license : 'MIT',
     default_options : [
         'c_std=gnu99',
+        'cpp_std=gnu++17',
         'warning_level=2',
         'werror=false',
         'optimization=2',
@@ -27,15 +28,18 @@ message('Building for architecture: ' + arch)
 # 工具链配置
 # =============================================================================
 cc = meson.get_compiler('c')
+cpp = meson.get_compiler('cpp')
 objcopy = find_program('objcopy', required : true)
 objdump = find_program('objdump', required : true)
+sh = find_program('sh', required : true)
 qemu = find_program('qemu-system-x86_64', required : false)
 grub_mkrescue = find_program('grub-mkrescue', required : false)
+xorriso = find_program('xorriso', required : false)
 
 # =============================================================================
 # 内核编译标志 (freestanding)
 # =============================================================================
-kernel_c_args = [
+kernel_common_args = [
     '-ffreestanding',
     '-nostdlib',
     '-nostdinc',
@@ -54,8 +58,19 @@ kernel_c_args = [
     '-Wno-pedantic',
     '-Wno-unused-parameter',
     '-Wno-unused-variable',
+]
+
+kernel_c_args = kernel_common_args + [
     '-Wno-missing-prototypes',
     '-Wno-implicit-function-declaration',
+]
+
+kernel_cpp_args = kernel_common_args + [
+    '-fno-exceptions',
+    '-fno-rtti',
+    '-fno-threadsafe-statics',
+    '-fno-use-cxa-atexit',
+    '-nostdinc++',
 ]
 
 kernel_link_args = [
@@ -77,12 +92,12 @@ kernel_inc = include_directories(
 # 源文件定义
 # =============================================================================
 
-# 内核核心源文件 (C)
+# 内核核心源文件 (C++)
 # Note: sched.c and sched_fair.c are excluded for now due to incomplete dependencies
-kernel_c_sources = files(
-    'src/kernel/main.c',
-    'src/kernel/shell.c',
-    'kernel/mm/buddy.c',
+kernel_cpp_sources = files(
+    'src/kernel/main.cpp',
+    'src/kernel/shell.cpp',
+    'kernel/mm/buddy.cpp',
 )
 
 # 架构相关的汇编文件 (GAS 语法，使用 GCC 编译)
@@ -99,10 +114,11 @@ kernel_ld_script = meson.current_source_dir() / 'arch' / arch / 'boot' / 'kernel
 # 内核可执行文件
 # =============================================================================
 kernel_elf = executable('kernel.elf',
-    kernel_c_sources,
+    kernel_cpp_sources,
     kernel_asm_sources,
     include_directories : kernel_inc,
     c_args : kernel_c_args,
+    cpp_args : kernel_cpp_args,
     link_args : kernel_link_args + ['-T', kernel_ld_script],
     link_depends : kernel_ld_script,
     pie : false,
@@ -142,26 +158,31 @@ kernel_symbols = custom_target('kernel.sym',
 )
 
 # =============================================================================
-# QEMU 运行目标
-# =============================================================================
-if qemu.found()
-    run_target('qemu',
-        command : [qemu, '-kernel', kernel_bin, '-m', '512M', '-serial', 'stdio'],
-        depends : kernel_bin,
-    )
-
-    run_target('debug',
-        command : [qemu, '-kernel', kernel_elf, '-m', '512M', '-serial', 'stdio', '-s', '-S'],
-        depends : kernel_elf,
-    )
-endif
-
-# =============================================================================
 # ISO 生成 (可选)
 # =============================================================================
-if grub_mkrescue.found()
-    # ISO 生成需要额外的脚本支持
-    message('grub-mkrescue found, ISO generation available')
+if grub_mkrescue.found() and xorriso.found()
+    kernel_iso = custom_target('kernel.iso',
+        input : kernel_elf,
+        output : 'kernel.iso',
+        command : [sh, meson.current_source_dir() / 'scripts' / 'make_iso.sh', '@INPUT@', '@OUTPUT@'],
+        build_by_default : false,
+        install : true,
+        install_dir : 'boot',
+    )
+
+    if qemu.found()
+        run_target('qemu',
+            command : [qemu, '-cdrom', kernel_iso, '-m', '512M', '-serial', 'mon:stdio', '-no-reboot', '-no-shutdown'],
+            depends : kernel_iso,
+        )
+
+        run_target('debug',
+            command : [qemu, '-cdrom', kernel_iso, '-m', '512M', '-serial', 'mon:stdio', '-s', '-S', '-no-reboot', '-no-shutdown'],
+            depends : [kernel_iso, kernel_elf],
+        )
+    endif
+else
+    message('grub-mkrescue or xorriso not found, ISO/QEMU run targets unavailable')
 endif
 
 # =============================================================================
@@ -178,5 +199,8 @@ summary({
     'Kernel Name': kernel_name,
     'Version': meson.project_version(),
     'C Compiler': cc.get_id() + ' ' + cc.version(),
+    'C++ Compiler': cpp.get_id() + ' ' + cpp.version(),
     'QEMU': qemu.found() ? qemu.full_path() : 'Not found',
+    'grub-mkrescue': grub_mkrescue.found() ? grub_mkrescue.full_path() : 'Not found',
+    'xorriso': xorriso.found() ? xorriso.full_path() : 'Not found',
 }, section : 'Build Configuration')

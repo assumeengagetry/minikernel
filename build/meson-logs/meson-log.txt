@@ -1,0 +1,315 @@
+Build started at 2026-05-01T10:47:35.413702
+Main binary: /usr/bin/python
+Build Options: --cross-file=/home/assumeengage/OS_homework/minikernel/cross/x86_64-none.ini
+Python system: Linux
+The Meson build system
+Version: 1.11.1
+Source dir: /home/assumeengage/OS_homework/minikernel
+Build dir: /home/assumeengage/OS_homework/minikernel/build
+Build type: cross build
+Project name: microkernel
+Project version: 0.1.0
+C compiler for the host machine: gcc (gcc 15.2.1 "gcc (GCC) 15.2.1 20260209")
+C linker for the host machine: gcc ld.bfd 2.46
+-----------
+Detecting archiver via: `ar --version` -> 0
+stdout:
+GNU ar (GNU Binutils) 2.46
+Copyright (C) 2026 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) any later version.
+This program has absolutely no warranty.
+-----------
+-----------
+Detecting compiler via: `g++ --version` -> 0
+stdout:
+g++ (GCC) 15.2.1 20260209
+Copyright (C) 2025 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+-----------
+Running command: -cpp -x c++ -E -dM -
+-----
+-----------
+Detecting linker via: `g++ -Wl,--version` -> 0
+stdout:
+GNU ld (GNU Binutils) 2.46
+Copyright (C) 2026 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) a later version.
+This program has absolutely no warranty.
+-----------
+stderr:
+collect2 version 15.2.1 20260209
+/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccAHEq1K.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib --version -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
+-----------
+Sanity check compiler command line: g++ -D_FILE_OFFSET_BITS=64 -o sanity_check_for_cpp_cross.exe sanity_check_for_cpp.cpp -D_FILE_OFFSET_BITS=64 -c
+Sanity check compile stdout:
+
+-----
+Sanity check compile stderr:
+
+-----
+Cannot run cross check
+C++ compiler for the host machine: g++ (gcc 15.2.1 "g++ (GCC) 15.2.1 20260209")
+C++ linker for the host machine: g++ ld.bfd 2.46
+C compiler for the build machine: cc (gcc 15.2.1 "cc (GCC) 15.2.1 20260209")
+C linker for the build machine: cc ld.bfd 2.46
+-----------
+Detecting archiver via: `gcc-ar --version` -> 0
+stdout:
+GNU ar (GNU Binutils) 2.46
+Copyright (C) 2026 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) any later version.
+This program has absolutely no warranty.
+-----------
+-----------
+Detecting compiler via: `c++ --version` -> 0
+stdout:
+c++ (GCC) 15.2.1 20260209
+Copyright (C) 2025 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+-----------
+Running command: -cpp -x c++ -E -dM -
+-----
+-----------
+Detecting linker via: `c++ -Wl,--version` -> 0
+stdout:
+GNU ld (GNU Binutils) 2.46
+Copyright (C) 2026 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) a later version.
+This program has absolutely no warranty.
+-----------
+stderr:
+collect2 version 15.2.1 20260209
+/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/cc20mziM.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib --version -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
+-----------
+Sanity check compiler command line: c++ -D_FILE_OFFSET_BITS=64 -o sanity_check_for_cpp.exe sanity_check_for_cpp.cpp -D_FILE_OFFSET_BITS=64
+Sanity check compile stdout:
+
+-----
+Sanity check compile stderr:
+
+-----
+Sanity check built target output for build machine cpp compiler
+ -- Running test binary command:  /home/assumeengage/OS_homework/minikernel/build/meson-private/sanity_check_for_cpp.exe
+-----------
+Sanity check: `/home/assumeengage/OS_homework/minikernel/build/meson-private/sanity_check_for_cpp.exe` -> 0
+ -- stdout:
+ 
+ -- stderr:
+ 
+ -- returncode: 0
+C++ compiler for the build machine: c++ (gcc 15.2.1 "c++ (GCC) 15.2.1 20260209")
+C++ linker for the build machine: c++ ld.bfd 2.46
+Build machine cpu family: x86_64
+Build machine cpu: x86_64
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Target machine cpu family: x86_64
+Target machine cpu: x86_64
+Message: Building for architecture: x86_64
+Program objcopy found: YES
+Program objdump found: YES
+Program sh found: YES (/usr/bin/sh)
+Program qemu-system-x86_64 found: YES (/usr/bin/qemu-system-x86_64)
+Program grub-mkrescue found: YES (/usr/bin/grub-mkrescue)
+Program xorriso found: YES (/usr/bin/xorriso)
+Build targets in project: 7
+
+microkernel 0.1.0
+
+  Build Configuration
+    Architecture : x86_64
+    Kernel Name  : MicroKernel
+    Version      : 0.1.0
+    C Compiler   : gcc 15.2.1
+    C++ Compiler : gcc 15.2.1
+    QEMU         : /usr/bin/qemu-system-x86_64
+    grub-mkrescue: /usr/bin/grub-mkrescue
+    xorriso      : /usr/bin/xorriso
+
+  User defined options
+    Cross files  : /home/assumeengage/OS_homework/minikernel/cross/x86_64-none.ini
+
+Found ninja-1.13.2 at /usr/bin/ninja
+Running compile:
+Working directory:  /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpem494k76
+Code:
+
+        #ifdef __has_include
+         #if !__has_include("version")
+          #error "Header 'version' could not be found"
+         #endif
+        #else
+         #include <version>
+        #endif
+-----------
+Command line: `g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpem494k76/testfile.cpp -E -P -D_FILE_OFFSET_BITS=64 -P -O0 -U_FORTIFY_SOURCE -fpermissive` -> 0
+Running compile:
+Working directory:  /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy
+Code:
+
+        #include <version>
+        int main(void) {
+            /* If it's not defined as a macro, try to use as a symbol */
+            #ifndef _LIBCPP_VERSION
+                _LIBCPP_VERSION;
+            #endif
+            return 0;
+        }
+-----------
+Command line: `g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp -o /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/output.obj -c -D_FILE_OFFSET_BITS=64 -O0 -U_FORTIFY_SOURCE -fpermissive` -> 1
+stderr:
+/home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp: In function 'int main()':
+/home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp:6:17: error: '_LIBCPP_VERSION' was not declared in this scope
+    6 |                 _LIBCPP_VERSION;
+      |                 ^~~~~~~~~~~~~~~
+-----------
+Running compile:
+Working directory:  /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx
+Code:
+
+        #include <version>
+        using _LIBCPP_VERSION;
+        int main(void) { return 0; }
+-----------
+Command line: `g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/testfile.cpp -o /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/output.obj -c -D_FILE_OFFSET_BITS=64 -O0 -U_FORTIFY_SOURCE -fpermissive` -> 1
+stderr:
+/home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/testfile.cpp:3:15: error: expected nested-name-specifier before '_LIBCPP_VERSION'
+    3 |         using _LIBCPP_VERSION;
+      |               ^~~~~~~~~~~~~~~
+-----------
+Using cached compile:
+Cached command line:  g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpem494k76/testfile.cpp -E -P -D_FILE_OFFSET_BITS=64 -P -O0 -U_FORTIFY_SOURCE -fpermissive 
+
+Code:
+ 
+        #ifdef __has_include
+         #if !__has_include("version")
+          #error "Header 'version' could not be found"
+         #endif
+        #else
+         #include <version>
+        #endif
+Cached compiler stdout:
+ 
+Cached compiler stderr:
+ 
+Using cached compile:
+Cached command line:  g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp -o /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/output.obj -c -D_FILE_OFFSET_BITS=64 -O0 -U_FORTIFY_SOURCE -fpermissive 
+
+Code:
+ 
+        #include <version>
+        int main(void) {
+            /* If it's not defined as a macro, try to use as a symbol */
+            #ifndef _LIBCPP_VERSION
+                _LIBCPP_VERSION;
+            #endif
+            return 0;
+        }
+Cached compiler stdout:
+ 
+Cached compiler stderr:
+ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp: In function 'int main()':
+/home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp:6:17: error: '_LIBCPP_VERSION' was not declared in this scope
+    6 |                 _LIBCPP_VERSION;
+      |                 ^~~~~~~~~~~~~~~
+
+Using cached compile:
+Cached command line:  g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/testfile.cpp -o /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/output.obj -c -D_FILE_OFFSET_BITS=64 -O0 -U_FORTIFY_SOURCE -fpermissive 
+
+Code:
+ 
+        #include <version>
+        using _LIBCPP_VERSION;
+        int main(void) { return 0; }
+Cached compiler stdout:
+ 
+Cached compiler stderr:
+ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/testfile.cpp:3:15: error: expected nested-name-specifier before '_LIBCPP_VERSION'
+    3 |         using _LIBCPP_VERSION;
+      |               ^~~~~~~~~~~~~~~
+
+Using cached compile:
+Cached command line:  g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpem494k76/testfile.cpp -E -P -D_FILE_OFFSET_BITS=64 -P -O0 -U_FORTIFY_SOURCE -fpermissive 
+
+Code:
+ 
+        #ifdef __has_include
+         #if !__has_include("version")
+          #error "Header 'version' could not be found"
+         #endif
+        #else
+         #include <version>
+        #endif
+Cached compiler stdout:
+ 
+Cached compiler stderr:
+ 
+Using cached compile:
+Cached command line:  g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp -o /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/output.obj -c -D_FILE_OFFSET_BITS=64 -O0 -U_FORTIFY_SOURCE -fpermissive 
+
+Code:
+ 
+        #include <version>
+        int main(void) {
+            /* If it's not defined as a macro, try to use as a symbol */
+            #ifndef _LIBCPP_VERSION
+                _LIBCPP_VERSION;
+            #endif
+            return 0;
+        }
+Cached compiler stdout:
+ 
+Cached compiler stderr:
+ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp: In function 'int main()':
+/home/assumeengage/OS_homework/minikernel/build/meson-private/tmpkwskbtxy/testfile.cpp:6:17: error: '_LIBCPP_VERSION' was not declared in this scope
+    6 |                 _LIBCPP_VERSION;
+      |                 ^~~~~~~~~~~~~~~
+
+Using cached compile:
+Cached command line:  g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/testfile.cpp -o /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/output.obj -c -D_FILE_OFFSET_BITS=64 -O0 -U_FORTIFY_SOURCE -fpermissive 
+
+Code:
+ 
+        #include <version>
+        using _LIBCPP_VERSION;
+        int main(void) { return 0; }
+Cached compiler stdout:
+ 
+Cached compiler stderr:
+ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpg3eaunnx/testfile.cpp:3:15: error: expected nested-name-specifier before '_LIBCPP_VERSION'
+    3 |         using _LIBCPP_VERSION;
+      |               ^~~~~~~~~~~~~~~
+
+Running compile:
+Working directory:  /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpdhpiyt1x
+Code:
+
+-----------
+Command line: `gcc /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpdhpiyt1x/testfile.c -o /home/assumeengage/OS_homework/minikernel/build/meson-private/tmpdhpiyt1x/output.obj -c -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -m64 -mcmodel=kernel -fno-pic -fno-pie -D_FILE_OFFSET_BITS=64 -O0 -U_FORTIFY_SOURCE --print-search-dirs` -> 0
+stdout:
+install: /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/
+programs: =/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/bin/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/bin/
+libraries: =/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/lib/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/x86_64-pc-linux-gnu/15.2.1/:/lib/../lib/:/usr/lib/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
+-----------
+Running compile:
+Working directory:  /home/assumeengage/OS_homework/minikernel/build/meson-private/tmp0jvumty_
+Code:
+
+-----------
+Command line: `g++ /home/assumeengage/OS_homework/minikernel/build/meson-private/tmp0jvumty_/testfile.cpp -o /home/assumeengage/OS_homework/minikernel/build/meson-private/tmp0jvumty_/output.obj -c -D_FILE_OFFSET_BITS=64 -O0 -U_FORTIFY_SOURCE -fpermissive --print-search-dirs` -> 0
+stdout:
+install: /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/
+programs: =/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/bin/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/bin/
+libraries: =/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/lib/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/x86_64-pc-linux-gnu/15.2.1/:/lib/../lib/:/usr/lib/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../x86_64-pc-linux-gnu/lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
+-----------
+Failed to guess install tag for /usr/local/boot/kernel.bin
+Failed to guess install tag for /usr/local/boot/kernel.iso
+Failed to guess install tag for /usr/local/boot/kernel.bin
+Failed to guess install tag for /usr/local/boot/kernel.iso

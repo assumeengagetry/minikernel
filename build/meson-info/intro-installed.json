@@ -1,0 +1,5 @@
+{
+  "/home/assumeengage/OS_homework/minikernel/build/kernel.elf": "/usr/local/boot/kernel.elf",
+  "/home/assumeengage/OS_homework/minikernel/build/kernel.bin": "/usr/local/boot/kernel.bin",
+  "/home/assumeengage/OS_homework/minikernel/build/kernel.iso": "/usr/local/boot/kernel.iso"
+}

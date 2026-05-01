@@ -10,6 +10,8 @@
 #include "../include/list.h"
 #include "../include/spinlock.h"
 
+extern "C" {
+
 /* External declarations */
 extern int printk(const char *fmt, ...);
 
@@ -183,7 +185,7 @@ static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags
         atomic_set(&page[i]._mapcount, -1);
         page[i].mapping = NULL;
         page[i].index = 0;
-        page[i].private = 0;
+        page[i].private_data = 0;
     }
     
     /* Zero the pages if requested */
@@ -606,3 +608,4 @@ void *krealloc(void *ptr, size_t new_size, gfp_t flags)
     return new_ptr;
 }
 
+}

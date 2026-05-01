@@ -19,10 +19,10 @@ MiniKernel 的内存管理子系统负责管理系统的物理内存和虚拟地
 
 | 组件 | 描述 | 位置 |
 |------|------|------|
-| 伙伴系统分配器 | 物理页面分配 | `kernel/mm/buddy.c` |
+| 伙伴系统分配器 | 物理页面分配 | `kernel/mm/buddy.cpp` |
 | 页表管理 | 虚拟地址映射 | `arch/x86_64/mm/` |
-| kmalloc | 内核小对象分配 | `kernel/mm/buddy.c` |
-| 内存区域管理 | 区分不同用途的内存 | `kernel/mm/buddy.c` |
+| kmalloc | 内核小对象分配 | `kernel/mm/buddy.cpp` |
+| 内存区域管理 | 区分不同用途的内存 | `kernel/mm/buddy.cpp` |
 
 ### 1.1 设计原则
 

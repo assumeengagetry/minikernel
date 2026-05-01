@@ -1,0 +1,9 @@
+# ninja log v7
+2	13	1777603604803482011	kernel.elf.p/arch_x86_64_cpu_switch.S.o	325ecb2010a2cdaf
+1	13	1777603604803236998	kernel.elf.p/arch_x86_64_boot_boot.S.o	fc209a83d7475df9
+2	14	1777603604803875022	kernel.elf.p/kernel_interrupt_interrupt.S.o	3daff27be583ad26
+1	148	1777603604802561228	kernel.elf.p/kernel_mm_buddy.cpp.o	6658843d310841ba
+0	197	1777603604800561228	kernel.elf.p/src_kernel_main.cpp.o	196851e0c02f3b5f
+0	276	1777603604802386546	kernel.elf.p/src_kernel_shell.cpp.o	d544053e8ff3e3fc
+276	284	1777603605076561210	kernel.elf	e1c2c3d9c2615231
+284	287	1777603605088934308	kernel.bin	434b5e788999bcf3

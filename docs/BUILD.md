@@ -24,8 +24,7 @@
 
 | 工具 | 最低版本 | 用途 |
 |------|----------|------|
-| GCC | 9.0+ | C 编译器 |
-| NASM | 2.14+ | 汇编器 |
+| GCC/G++ | 9.0+ | C/C++ 编译器 |
 | Binutils | 2.34+ | 链接器、objcopy、objdump |
 | Meson | 1.0.0+ | 构建系统 |
 | Ninja | 1.10+ | 构建后端 |
@@ -37,7 +36,7 @@
 | Conan | 依赖管理（2.0+） |
 | QEMU | 运行/测试内核 |
 | GDB | 调试 |
-| grub-mkrescue | 生成 ISO 镜像 |
+| grub-mkrescue + xorriso | 生成 ISO 镜像 |
 
 ### 安装依赖
 
@@ -45,13 +44,13 @@
 ```bash
 # 必需工具
 sudo apt update
-sudo apt install build-essential gcc nasm binutils
+sudo apt install build-essential gcc g++ binutils
 
 # Meson 和 Ninja
 sudo apt install meson ninja-build
 
-# 可选：QEMU
-sudo apt install qemu-system-x86
+# 可选：QEMU 和 ISO 生成
+sudo apt install qemu-system-x86 grub-pc-bin xorriso
 
 # 可选：Conan
 pip install conan
@@ -59,13 +58,13 @@ pip install conan
 
 **Arch Linux:**
 ```bash
-sudo pacman -S base-devel gcc nasm meson ninja qemu-system-x86
+sudo pacman -S base-devel gcc meson ninja qemu-system-x86 grub xorriso
 pip install conan
 ```
 
 **Fedora:**
 ```bash
-sudo dnf install gcc nasm binutils meson ninja-build qemu-system-x86
+sudo dnf install gcc gcc-c++ binutils meson ninja-build qemu-system-x86 grub2-tools xorriso
 pip install conan
 ```
 
@@ -116,18 +115,8 @@ cd Kernal
 如果你需要管理复杂的依赖关系，推荐使用 Conan。
 
 ```bash
-# 1. 安装依赖并生成构建文件
-conan install . --output-folder=build --build=missing
-
-# 2. 配置 Meson（使用 Conan 生成的工具链）
-cd build
-meson setup .. --cross-file=../cross/x86_64-none.ini
-
-# 3. 编译
-meson compile
-
-# 或者使用 conanfile.py 一键构建
-conan build .
+# Conan 安装 Meson/Ninja 并调用 Meson cross build
+conan build . --output-folder=build-conan
 ```
 
 ### 方法三：仅使用 Meson
@@ -195,8 +184,8 @@ conan install . -o arch=x86_64 -o kernel_debug=True -o max_cpus=16
 # 使用构建脚本
 ./scripts/build.sh qemu
 
-# 或直接运行
-qemu-system-x86_64 -kernel build/kernel.bin -m 512M -serial stdio
+# 或直接运行 ISO（需要先生成 kernel.iso）
+qemu-system-x86_64 -cdrom build/kernel.iso -m 512M -serial mon:stdio
 ```
 
 ### 调试模式
@@ -209,7 +198,7 @@ qemu-system-x86_64 -kernel build/kernel.bin -m 512M -serial stdio
 gdb build/kernel.elf -ex 'target remote localhost:1234'
 ```
 
-### 生成 ISO（需要 grub-mkrescue）
+### 生成 ISO（需要 grub-mkrescue 和 xorriso）
 
 ```bash
 # 生成可启动 ISO
@@ -296,13 +285,13 @@ Kernal/
 
 ## 常见问题
 
-### Q: 构建失败，提示找不到 nasm
+### Q: 构建失败，提示找不到 g++
 
-确保 NASM 已安装：
+确保 C++ 编译器已安装：
 ```bash
-sudo apt install nasm  # Debian/Ubuntu
-sudo pacman -S nasm    # Arch
-sudo dnf install nasm  # Fedora
+sudo apt install g++       # Debian/Ubuntu
+sudo pacman -S gcc         # Arch
+sudo dnf install gcc-c++   # Fedora
 ```
 
 ### Q: 链接错误，找不到符号
@@ -313,9 +302,9 @@ sudo dnf install nasm  # Fedora
 
 确保使用了 `-serial stdio` 参数，内核通过串口输出调试信息。
 
-### Q: 如何切换回传统 Makefile 构建？
+### Q: Makefile 还是传统构建吗？
 
-原有的 Makefile 仍然保留，可以直接使用：
+不是。Makefile 现在是 Meson/Conan 的薄封装，可以继续使用常用入口：
 ```bash
 make clean
 make all
@@ -331,11 +320,11 @@ pip install --upgrade conan
 
 ### Q: 如何添加新的源文件？
 
-编辑 `meson.build`，在 `kernel_sources` 或 `arch_asm_sources` 中添加新文件：
+编辑 `meson.build`，在 `kernel_cpp_sources` 或 `kernel_asm_sources` 中添加新文件：
 ```meson
-kernel_sources = files(
-    'src/kernel/main.c',
-    'src/kernel/new_file.c',  # 新增
+kernel_cpp_sources = files(
+    'src/kernel/main.cpp',
+    'src/kernel/new_file.cpp',  # 新增
     ...
 )
 ```

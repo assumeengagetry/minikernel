@@ -32,6 +32,10 @@ typedef struct rwlock {
 /*
  * Forward declarations for external functions
  */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern u32 smp_processor_id(void);
 extern void cpu_relax(void);
 extern unsigned long local_irq_save(void);
@@ -40,6 +44,10 @@ extern void local_irq_disable(void);
 extern void local_irq_enable(void);
 extern void local_bh_disable(void);
 extern void local_bh_enable(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*
  * Spinlock initialization

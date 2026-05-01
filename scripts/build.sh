@@ -53,7 +53,7 @@ check_dependencies() {
     command -v meson >/dev/null 2>&1 || missing+=("meson")
     command -v ninja >/dev/null 2>&1 || missing+=("ninja")
     command -v gcc >/dev/null 2>&1 || missing+=("gcc")
-    command -v nasm >/dev/null 2>&1 || missing+=("nasm")
+    command -v g++ >/dev/null 2>&1 || missing+=("g++")
     command -v objcopy >/dev/null 2>&1 || missing+=("objcopy (binutils)")
     command -v objdump >/dev/null 2>&1 || missing+=("objdump (binutils)")
 
@@ -64,6 +64,10 @@ check_dependencies() {
 
     if ! command -v qemu-system-x86_64 >/dev/null 2>&1; then
         warn "qemu-system-x86_64 未安装，无法运行内核"
+    fi
+
+    if ! command -v xorriso >/dev/null 2>&1; then
+        warn "xorriso 未安装，无法生成 GRUB ISO"
     fi
 
     if [ ${#missing[@]} -ne 0 ]; then
@@ -97,11 +101,12 @@ meson_setup() {
 
     cd "$PROJECT_ROOT"
 
-    # 如果构建目录已存在，先清理
+    local meson_private="${BUILD_DIR}/meson-private/coredata.dat"
+
     if [ -d "$BUILD_DIR" ] && [ "$1" == "--reconfigure" ]; then
         info "重新配置构建目录..."
         meson setup "$BUILD_DIR" --reconfigure --cross-file="$CROSS_FILE"
-    elif [ ! -d "$BUILD_DIR" ]; then
+    elif [ ! -f "$meson_private" ]; then
         meson setup "$BUILD_DIR" --cross-file="$CROSS_FILE"
     else
         info "构建目录已存在，使用现有配置"
@@ -152,6 +157,10 @@ create_iso() {
 
     if ! command -v grub-mkrescue >/dev/null 2>&1; then
         error "grub-mkrescue 未安装 (sudo apt install grub-pc-bin xorriso)"
+    fi
+
+    if ! command -v xorriso >/dev/null 2>&1; then
+        error "xorriso 未安装 (sudo apt install xorriso)"
     fi
 
     local iso_dir="${BUILD_DIR}/iso"

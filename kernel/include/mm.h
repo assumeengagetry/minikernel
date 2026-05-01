@@ -147,7 +147,7 @@ struct page {
         };
     };
     
-    unsigned long private;          /* Private data */
+    unsigned long private_data;     /* Private data */
 };
 
 /* Page flag operations */
@@ -231,6 +231,10 @@ struct pglist_data {
 };
 
 /* Global memory node */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern struct pglist_data node_data;
 #define NODE_DATA(nid)  (&node_data)
 
@@ -238,6 +242,10 @@ extern struct pglist_data node_data;
 extern struct page *mem_map;
 extern unsigned long mem_map_size;
 extern phys_addr_t phys_base;
+
+#ifdef __cplusplus
+}
+#endif
 
 #define page_to_pfn(page)   ((unsigned long)((page) - mem_map))
 #define pfn_to_page(pfn)    (mem_map + (pfn))
@@ -259,6 +267,10 @@ extern phys_addr_t phys_base;
  */
 
 /* Initialize the buddy allocator */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void buddy_init(void);
 
 /* Allocate pages */
@@ -321,7 +333,7 @@ void *krealloc(void *ptr, size_t new_size, gfp_t flags);
 /* Memory copying */
 static inline void *memset(void *s, int c, size_t n)
 {
-    unsigned char *p = s;
+    unsigned char *p = (unsigned char *)s;
     while (n--)
         *p++ = (unsigned char)c;
     return s;
@@ -329,8 +341,8 @@ static inline void *memset(void *s, int c, size_t n)
 
 static inline void *memcpy(void *dest, const void *src, size_t n)
 {
-    unsigned char *d = dest;
-    const unsigned char *s = src;
+    unsigned char *d = (unsigned char *)dest;
+    const unsigned char *s = (const unsigned char *)src;
     while (n--)
         *d++ = *s++;
     return dest;
@@ -338,8 +350,8 @@ static inline void *memcpy(void *dest, const void *src, size_t n)
 
 static inline void *memmove(void *dest, const void *src, size_t n)
 {
-    unsigned char *d = dest;
-    const unsigned char *s = src;
+    unsigned char *d = (unsigned char *)dest;
+    const unsigned char *s = (const unsigned char *)src;
     
     if (d < s) {
         while (n--)
@@ -355,7 +367,8 @@ static inline void *memmove(void *dest, const void *src, size_t n)
 
 static inline int memcmp(const void *s1, const void *s2, size_t n)
 {
-    const unsigned char *p1 = s1, *p2 = s2;
+    const unsigned char *p1 = (const unsigned char *)s1;
+    const unsigned char *p2 = (const unsigned char *)s2;
     while (n--) {
         if (*p1 != *p2)
             return *p1 - *p2;
@@ -420,6 +433,10 @@ struct sysinfo {
 
 void si_meminfo(struct sysinfo *info);
 void si_swapinfo(struct sysinfo *info);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*
  * UTS name structure (for sys_uname)
