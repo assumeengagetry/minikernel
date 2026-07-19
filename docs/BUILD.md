@@ -51,14 +51,6 @@ make debug
 gdb build/kernel.elf -ex 'target remote localhost:1234'
 ```
 
-辅助输出：
-
-```bash
-make disasm
-make symbols
-make size
-```
-
 ## Verification
 
 ```bash

@@ -9,10 +9,9 @@ assignees: ''
 ## 文档位置
 <!-- 指出需要改进的文档位置 -->
 - [ ] README.md
-- [ ] docs/design/
-- [ ] docs/dev-setup.md
-- [ ] docs/roadmap.md
-- [ ] 其他: 
+- [ ] docs/BUILD.md
+- [ ] docs/CONTRIBUTING.md
+- [ ] 其他:
 
 ## 现有问题
 <!-- 描述当前文档存在的问题 -->

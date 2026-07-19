@@ -5,9 +5,8 @@ MicroKernel 是一个最小的 x86_64 freestanding 内核。目前的可运行�
 - GRUB Multiboot1 启动
 - 32 位保护模式切换到 64 位长模式
 - 串口日志和交互式 Shell
-- 伙伴内存分配器基础实现
 
-项目当前不包含可运行的调度器、用户态、系统调用或中断子系统。
+项目当前不包含内存分配器、调度器、用户态、系统调用或中断子系统。
 
 ## 依赖
 
@@ -26,7 +25,7 @@ make check-tools
 make all
 ```
 
-构建结果位于 `build/kernel.elf` 和 `build/kernel.bin`。
+构建结果位于 `build/kernel.elf`。ISO 会在运行 QEMU 时临时生成。
 
 ## QEMU
 
@@ -56,8 +55,7 @@ Shell 使用 QEMU 串口输入输出。输入 `help` 查看可用命令。
 - `arch/x86_64/boot/`：Multiboot 入口、长模式切换和链接脚本
 - `src/kernel/main.cpp`：串口控制台和内核入口
 - `src/kernel/shell.cpp`：交互式内核 Shell
-- `kernel/mm/buddy.cpp`：伙伴分配器
-- `kernel/include/`：当前构建使用的 freestanding 头文件
+- `kernel/include/`：当前构建使用的基础头文件
 - `scripts/`：ISO 生成和 QEMU 冒烟测试
 - `cross/`：Meson bare-metal 配置
 

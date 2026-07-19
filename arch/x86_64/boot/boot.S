@@ -48,7 +48,6 @@ gdt64:
     .quad 0x0000920000000000    # 64位数据段
 gdt64_end:
 
-.global gdt64_desc
 gdt64_desc:
     .word gdt64_end - gdt64 - 1
     .quad gdt64
@@ -146,13 +145,6 @@ setup_page_tables:
     orl $0x003, %eax    # 存在 + 可写
     movl %eax, (%edi)
 
-    # 设置 PML4[256] -> PDPT (高地址映射 0xFFFF800000000000)
-    movl $boot_pml4, %edi
-    addl $(256 * 8), %edi
-    movl $boot_pdpt, %eax
-    orl $0x003, %eax
-    movl %eax, (%edi)
-
     # 设置 PDPT[0] -> PDT
     movl $boot_pdpt, %edi
     movl $boot_pdt, %eax
@@ -231,24 +223,3 @@ long_mode_start:
     cli
 1:  hlt
     jmp 1b
-
-# 辅助函数：串口输出字符 (调试用)
-.global serial_putc_asm
-serial_putc_asm:
-    # 参数在 %rdi 中
-    movw $0x3F8, %dx
-    addw $5, %dx
-1:  inb %dx, %al
-    testb $0x20, %al
-    jz 1b
-    movw $0x3F8, %dx
-    movb %dil, %al
-    outb %al, %dx
-    ret
-
-# 停机函数
-.global halt_cpu
-halt_cpu:
-    cli
-    hlt
-    jmp halt_cpu

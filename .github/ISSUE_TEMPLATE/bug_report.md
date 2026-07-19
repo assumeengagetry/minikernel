@@ -24,10 +24,11 @@ assignees: ''
 ## 环境信息
 - 操作系统: [例如: Ubuntu 22.04]
 - 工具链版本:
-  - gcc/x86_64-elf-gcc: 
-  - nasm: 
-  - qemu: 
-- 提交hash: 
+  - gcc/g++:
+  - meson/ninja:
+  - grub-mkimage/xorriso:
+  - qemu-system-x86_64:
+- 提交 hash:
 
 ## 其他信息
 <!-- 添加任何关于问题的其他有用信息 -->

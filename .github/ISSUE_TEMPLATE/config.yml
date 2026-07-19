@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: 项目讨论
-    url: https://github.com/assumeengagetry/Kernal/discussions
+    url: https://github.com/assumeengagetry/minikernel/discussions
     about: 请在这里讨论想法或提问
   - name: 贡献指南
-    url: https://github.com/assumeengagetry/Kernal/blob/main/CONTRIBUTING.md
+    url: https://github.com/assumeengagetry/minikernel/blob/main/docs/CONTRIBUTING.md
     about: 在提交issue前请查看贡献指南

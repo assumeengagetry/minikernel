@@ -20,11 +20,10 @@ jobs:
             gcc g++ binutils meson ninja-build \
             grub-pc-bin xorriso qemu-system-x86
 
-      - name: Build kernel and ISO
+      - name: Build kernel
         run: |
           make check-tools
           make all
-          meson compile -C build kernel.iso
 
       - name: Validate kernel image
         run: |

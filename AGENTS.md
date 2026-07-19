@@ -2,8 +2,8 @@
 
 ## Build And Run
 
-- The source of truth is `meson.build`, `meson_options.txt`,
-  `cross/x86_64-none.ini`, and the root `Makefile`.
+- The source of truth is `meson.build`, `cross/x86_64-none.ini`, and the root
+  `Makefile`.
 - Check dependencies with `make check-tools`.
 - Build with `make all`.
 - Run interactively with `make qemu`.
@@ -19,10 +19,10 @@
 - This is an x86_64 freestanding kernel built with GNU C99/C++17 and no hosted
   standard library.
 - The active source list is explicit in `meson.build`: the Multiboot1 boot
-  assembly, `src/kernel/main.cpp`, `src/kernel/shell.cpp`, and
-  `kernel/mm/buddy.cpp`.
-- Boot flow is `arch/x86_64/boot/boot.S` -> `kernel_main()` -> memory
-  initialization -> the serial Shell.
+  assembly, `src/kernel/main.cpp`, and `src/kernel/shell.cpp`.
+- Boot flow is `arch/x86_64/boot/boot.S` -> `kernel_main()` -> the serial Shell.
+- There is intentionally no memory allocator or other kernel subsystem in the
+  current build.
 - The ISO is generated at build time by `scripts/make_iso.sh` using
   `grub-mkimage` and `xorriso`; it does not use `grub-mkrescue` or mtools.
 - Scheduler, userspace, syscall, and interrupt implementations are not part

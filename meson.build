@@ -15,9 +15,6 @@ project(
     ],
 )
 
-arch = get_option('arch')
-objcopy = find_program('objcopy', required : true)
-objdump = find_program('objdump', required : true)
 qemu = find_program('qemu-system-x86_64', required : true)
 grub_mkimage = find_program('grub-mkimage', required : true)
 xorriso = find_program('xorriso', required : true)
@@ -60,11 +57,10 @@ kernel_link_args = [
 kernel_sources = files(
     'src/kernel/main.cpp',
     'src/kernel/shell.cpp',
-    'kernel/mm/buddy.cpp',
     'arch/x86_64/boot/boot.S',
 )
 
-kernel_linker_script = meson.current_source_dir() / 'arch' / arch / 'boot' / 'kernel.ld'
+kernel_linker_script = meson.current_source_dir() / 'arch/x86_64/boot/kernel.ld'
 
 kernel_elf = executable(
     'kernel.elf',
@@ -75,32 +71,6 @@ kernel_elf = executable(
     link_args : kernel_link_args + ['-T', kernel_linker_script],
     link_depends : kernel_linker_script,
     pie : false,
-)
-
-kernel_bin = custom_target(
-    'kernel.bin',
-    input : kernel_elf,
-    output : 'kernel.bin',
-    command : [objcopy, '-O', 'binary', '@INPUT@', '@OUTPUT@'],
-    build_by_default : true,
-)
-
-kernel_disasm = custom_target(
-    'kernel.dis',
-    input : kernel_elf,
-    output : 'kernel.dis',
-    command : [objdump, '-d', '@INPUT@'],
-    capture : true,
-    build_by_default : false,
-)
-
-kernel_symbols = custom_target(
-    'kernel.sym',
-    input : kernel_elf,
-    output : 'kernel.sym',
-    command : [objdump, '-t', '@INPUT@'],
-    capture : true,
-    build_by_default : false,
 )
 
 kernel_iso = custom_target(
@@ -150,7 +120,7 @@ run_target(
 
 summary(
     {
-        'Architecture' : arch,
+        'Architecture' : 'x86_64',
         'Kernel ELF' : 'build/kernel.elf',
         'QEMU' : qemu.full_path(),
         'GRUB image builder' : grub_mkimage.full_path(),
