@@ -1,22 +1,5 @@
 # x86_64 简化版内核引导代码
 
-.section .text
-.global _start
-
-_start:
-    movq $stack_top, %rsp
-    call kernel_main
-    cli
-    hlt
-
-.section .bss
-.align 16
-stack_bottom:
-    .space 16384
-stack_top:
-    .long 8     # 大小
-multiboot2_header_end:
-
 .section .bss
 .align 16
 stack_bottom:
@@ -156,7 +139,7 @@ enable_paging:
 
     # 启用分页
     mov %cr0, %rax
-    or $0x80000000, %rax
+    or $0x80000000, %eax
     mov %rax, %cr0
 
     ret
@@ -186,7 +169,8 @@ long_mode_start:
 
     # 设置高地址栈
     mov $stack_top, %rsp
-    add $0xFFFF800000000000, %rsp
+    movabs $0xFFFF800000000000, %rax
+    add %rax, %rsp
 
     # 恢复 multiboot2 参数
     popq %rax
