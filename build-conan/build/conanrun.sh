@@ -1,1 +1,0 @@
-. "/home/assumeengage/OS_homework/minikernel/build-conan/build/conanrunenv-release-x86_64.sh"

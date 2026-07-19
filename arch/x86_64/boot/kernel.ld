@@ -15,17 +15,13 @@ SECTIONS
 
     /*
      * Multiboot 头部段
-     * 必须在最前面，在前 8KB 内 (Multiboot1) / 32KB 内 (Multiboot2)
+     * 必须在最前面，并位于 Multiboot1 要求的前 8KB 内
      * 使用 ALIGN(4096) 确保整个头部和代码在同一个 LOAD 段中
      */
     .boot ALIGN(4) :
     {
-        /* Multiboot1 头部 (12 bytes) - 用于 QEMU -kernel */
+        /* Multiboot1 头部 (12 bytes) */
         KEEP(*(.multiboot))
-
-        /* Multiboot2 头部 - 用于 GRUB2 */
-        . = ALIGN(8);
-        KEEP(*(.multiboot2))
     }
 
     /* 代码段 - 紧跟在 multiboot 头部之后 */

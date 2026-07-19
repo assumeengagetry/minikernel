@@ -47,8 +47,7 @@ static inline unsigned long __find_buddy_pfn(unsigned long page_pfn,
 /*
  * Check if a page is a valid buddy
  */
-static inline int page_is_buddy(struct page *page, struct page *buddy,
-                               unsigned int order)
+static inline int page_is_buddy(struct page *buddy, unsigned int order)
 {
     if (!PageBuddy(buddy))
         return 0;
@@ -94,14 +93,13 @@ static inline void add_page_to_free_list(struct page *page,
  * Split a high-order page into lower-order pages
  */
 static void expand(struct zone *zone, struct page *page,
-                  int low, int high, struct free_area *area)
+                  int low, int high)
 {
     unsigned long size = 1 << high;
     
     while (high > low) {
         high--;
         size >>= 1;
-        area--;
         
         /* Add the buddy half to the free list */
         add_page_to_free_list(&page[size], zone, high);
@@ -114,22 +112,20 @@ static void expand(struct zone *zone, struct page *page,
 static struct page *__rmqueue_smallest(struct zone *zone, unsigned int order)
 {
     unsigned int current_order;
-    struct free_area *area;
     struct page *page;
     
     /* Find the smallest available order that fits */
     for (current_order = order; current_order < MAX_ORDER; current_order++) {
-        area = &zone->free_area[current_order];
-        
-        if (list_empty(&area->free_list))
+        if (list_empty(&zone->free_area[current_order].free_list))
             continue;
         
         /* Get the first page from the free list */
-        page = list_first_entry(&area->free_list, struct page, buddy_list);
+        page = list_first_entry(&zone->free_area[current_order].free_list,
+                                struct page, buddy_list);
         del_page_from_free_list(page, zone, current_order);
         
         /* Split if necessary */
-        expand(zone, page, order, current_order, area);
+        expand(zone, page, order, current_order);
         
         return page;
     }
@@ -151,7 +147,7 @@ static void __free_one_page(struct page *page, unsigned long pfn,
         buddy = pfn_to_page(buddy_pfn);
         
         /* Check if buddy is valid and free */
-        if (!page_is_buddy(page, buddy, order))
+        if (!page_is_buddy(buddy, order))
             break;
         
         /* Remove buddy from the free list */
@@ -298,8 +294,6 @@ void free_area_init(unsigned long start_pfn, unsigned long end_pfn)
         /* Find the largest order that fits */
         unsigned int order = MAX_ORDER - 1;
         while (order > 0) {
-            unsigned long buddy_pfn = pfn ^ (1 << order);
-            
             /* Check alignment and bounds */
             if ((pfn & ((1 << order) - 1)) != 0)
                 order--;

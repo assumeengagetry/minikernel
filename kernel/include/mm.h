@@ -5,6 +5,8 @@
 #include "list.h"
 #include "spinlock.h"
 
+struct mm_struct;
+
 /*
  * Memory Management Header for MicroKernel
  * Simplified implementation focused on buddy system allocation

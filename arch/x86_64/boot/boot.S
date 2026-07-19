@@ -1,6 +1,6 @@
 # x86_64 内核引导代码
 # 这个文件包含了内核的引导入口点和初始化代码
-# 支持 Multiboot1 (QEMU -kernel) 和 Multiboot2 (GRUB2)
+# 使用 Multiboot1，由 GRUB 加载到 QEMU
 
 # Mark stack as non-executable (fix linker warning)
 .section .note.GNU-stack,"",@progbits
@@ -8,7 +8,7 @@
 # =============================================================================
 # Multiboot1 头部 (用于 QEMU -kernel 启动)
 # =============================================================================
-.section .multiboot
+.section .multiboot,"a"
 .align 4
 
 # Multiboot1 常量
@@ -23,25 +23,6 @@ multiboot_header:
     .long MULTIBOOT_MAGIC
     .long MULTIBOOT_FLAGS
     .long MULTIBOOT_CHECKSUM
-
-# =============================================================================
-# Multiboot2 头部 (用于 GRUB2 启动)
-# =============================================================================
-.section .multiboot2
-.align 8
-
-# Multiboot2 头部
-multiboot2_header:
-    .long 0xe85250d6                    # 魔数
-    .long 0                             # 架构 (0 = i386)
-    .long multiboot2_header_end - multiboot2_header    # 头部长度
-    .long -(0xe85250d6 + 0 + (multiboot2_header_end - multiboot2_header))  # 校验和
-
-    # 结束标记
-    .short 0    # 类型
-    .short 0    # 标志
-    .long 8     # 大小
-multiboot2_header_end:
 
 .section .bss
 .align 16
@@ -80,10 +61,7 @@ gdt64_desc:
 _start:
     # 禁用中断
     cli
-
-    # 保存 multiboot2 信息
-    movl %ebx, %edi    # multiboot2 信息结构指针
-    movl %eax, %esi    # multiboot2 魔数
+    cld
 
     # 设置临时栈指针
     movl $stack_top, %esp
@@ -245,12 +223,6 @@ long_mode_start:
 
     # 设置 64 位栈
     movabsq $stack_top, %rsp
-
-    # 清除 BSS 段 (可选，如果有)
-    # 准备参数给 kernel_main
-    # rdi = multiboot2 魔数, rsi = multiboot2 信息指针
-    movl %esi, %edi    # multiboot2 魔数
-    movq $0, %rsi      # 暂时不传递 multiboot 信息
 
     # 调用内核主函数
     call kernel_main

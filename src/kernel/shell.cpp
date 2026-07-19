@@ -21,10 +21,6 @@ extern "C" {
 /* Serial port */
 #define SERIAL_PORT         0x3F8
 #define SERIAL_DATA         (SERIAL_PORT + 0)
-#define SERIAL_IER          (SERIAL_PORT + 1)
-#define SERIAL_FIFO         (SERIAL_PORT + 2)
-#define SERIAL_LCR          (SERIAL_PORT + 3)
-#define SERIAL_MCR          (SERIAL_PORT + 4)
 #define SERIAL_LSR          (SERIAL_PORT + 5)
 
 /* Keyboard port */
@@ -72,11 +68,6 @@ static inline unsigned char inb(unsigned short port)
 static inline void outb(unsigned short port, unsigned char value)
 {
     __asm__ __volatile__("outb %0, %1" : : "a"(value), "Nd"(port));
-}
-
-static inline void io_wait(void)
-{
-    outb(0x80, 0);
 }
 
 /* ===========================================================================
@@ -160,7 +151,6 @@ static char shell_history[SHELL_HISTORY_SIZE][SHELL_BUFFER_SIZE];
 static int shell_history_count = 0;
 static int shell_history_index = 0;
 static volatile bool shell_running = true;
-static u64 shell_start_time = 0;
 static u64 jiffies = 0;  /* Simple tick counter */
 
 /* ===========================================================================
@@ -248,31 +238,6 @@ static void shell_print_prompt(void)
 /* ===========================================================================
  * Input functions
  * ===========================================================================*/
-
-static void serial_init(void)
-{
-    /* Disable interrupts */
-    outb(SERIAL_IER, 0x00);
-    
-    /* Enable DLAB (set baud rate divisor) */
-    outb(SERIAL_LCR, 0x80);
-    
-    /* Set divisor to 1 (115200 baud) */
-    outb(SERIAL_DATA, 0x01);
-    outb(SERIAL_IER, 0x00);
-    
-    /* 8 bits, no parity, one stop bit */
-    outb(SERIAL_LCR, 0x03);
-    
-    /* Enable FIFO, clear them, with 14-byte threshold */
-    outb(SERIAL_FIFO, 0xC7);
-    
-    /* Enable IRQs, RTS/DSR set */
-    outb(SERIAL_MCR, 0x0B);
-    
-    /* Enable receive interrupt */
-    outb(SERIAL_IER, 0x01);
-}
 
 static int serial_received(void)
 {
@@ -433,9 +398,7 @@ static void cmd_mem(int argc, char *argv[])
     
     unsigned long free_pages = 0;
     
-    /* Try to get actual free pages if the function exists */
-    /* For now, use placeholder values */
-    free_pages = 8192;  /* Placeholder: 32MB */
+    free_pages = nr_free_pages();
     
     shell_puts("\r\n");
     shell_puts("╔═══════════════════════════════════════╗\r\n");
@@ -986,9 +949,6 @@ static void shell_banner(void)
  */
 void shell_init(void)
 {
-    /* Initialize serial port for input */
-    serial_init();
-    
     /* Reset state */
     shell_buffer_pos = 0;
     shell_buffer[0] = '\0';

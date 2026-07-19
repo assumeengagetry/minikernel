@@ -36,8 +36,6 @@ typedef struct rwlock {
 extern "C" {
 #endif
 
-extern u32 smp_processor_id(void);
-extern void cpu_relax(void);
 extern unsigned long local_irq_save(void);
 extern void local_irq_restore(unsigned long flags);
 extern void local_irq_disable(void);
@@ -48,6 +46,11 @@ extern void local_bh_enable(void);
 #ifdef __cplusplus
 }
 #endif
+
+static inline void cpu_relax(void)
+{
+    __asm__ __volatile__("pause" ::: "memory");
+}
 
 /*
  * Spinlock initialization

@@ -1,7 +1,0 @@
-[options]
-prefix = /
-
-[properties]
-cross_file = ['/home/assumeengage/OS_homework/minikernel/build-conan/build/conan_meson_cross.ini']
-native_file = ['/home/assumeengage/OS_homework/minikernel/build-conan/build/conan_meson_native.ini']
-

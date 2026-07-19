@@ -9,16 +9,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc g++ binutils meson ninja-build qemu-system-x86
-        
-    - name: Build kernel
-      run: |
-        meson setup build --cross-file=cross/x86_64-none.ini
-        meson compile -C build
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc g++ binutils meson ninja-build \
+            grub-pc-bin xorriso qemu-system-x86
+
+      - name: Build kernel and ISO
+        run: |
+          make check-tools
+          make all
+          meson compile -C build kernel.iso
+
+      - name: Validate kernel image
+        run: |
+          grub-file --is-x86-multiboot build/kernel.elf
+          test -z "$(nm -u build/kernel.elf)"
+
+      - name: Boot QEMU
+        run: make qemu-smoke

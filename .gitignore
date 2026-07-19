@@ -1,0 +1,11 @@
+/build/
+/build-*/
+/obj/
+/iso/
+/.cache/
+/.idea/
+
+*.iso
+*.dis
+*.sym
+*~

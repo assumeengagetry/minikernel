@@ -168,8 +168,6 @@ typedef enum {
 #define S_ISFIFO(m) (((m) & S_IFMT) == S_IFIFO)
 #define S_ISSOCK(m) (((m) & S_IFMT) == S_IFSOCK)
 
-/* Scheduling policies and NR_CPUS are defined in sched.h */
-
 /* Forward declarations for commonly used structs */
 struct rusage;
 struct sysinfo;
