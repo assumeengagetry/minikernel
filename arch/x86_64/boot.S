@@ -1,196 +1,192 @@
-# x86_64 简化版内核引导代码
+/* Multiboot2 x86_64 bootstrap. */
+
+.section .multiboot2,"a"
+.align 8
+multiboot2_header:
+    .long 0xE85250D6
+    .long 0
+    .long multiboot2_header_end - multiboot2_header
+    .long -(0xE85250D6 + (multiboot2_header_end - multiboot2_header))
+    .word 0
+    .word 0
+    .long 8
+multiboot2_header_end:
 
 .section .bss
 .align 16
 stack_bottom:
-    .space 16384  # 16KB 栈空间
+    .space 16384
 stack_top:
 
-# 页表结构 (4KB 对齐)
 .align 4096
 boot_pml4:
     .space 4096
 boot_pdpt:
     .space 4096
 boot_pdt:
-    .space 4096
+    .space 4096 * 4
+
+.align 4
+multiboot_magic:
+    .long 0
+multiboot_info:
+    .long 0
+
+.section .data
+.align 8
+.global gdt64
+gdt64:
+    .quad 0x0000000000000000
+    .quad 0x00209A0000000000
+    .quad 0x0000920000000000
+gdt64_end:
+
+gdt64_desc:
+    .word 23
+    .long gdt64
 
 .section .text
+.code32
 .global _start
-.global gdt64
-.global gdt64_desc
+.type _start, @function
 
-# 内核入口点
 _start:
-    # 设置栈指针
-    movq $stack_top, %rsp
+    cli
+    cld
+    movl $stack_top, %esp
+    xorl %ebp, %ebp
 
-    # 保存 multiboot2 信息
-    pushq %rbx    # multiboot2 信息结构指针
-    pushq %rax    # multiboot2 魔数
+    cmpl $0x36D76289, %eax
+    jne invalid_multiboot
+    movl %eax, multiboot_magic
+    movl %ebx, multiboot_info
 
-    # 检查是否支持 CPUID
     call check_cpuid
-
-    # 检查是否支持长模式
     call check_long_mode
-
-    # 设置分页
     call setup_page_tables
     call enable_paging
 
-    # 加载 GDT
     lgdt gdt64_desc
+    ljmp $0x08, $long_mode_start
 
-    # 跳转到 64 位代码段
-    pushq $0x08
-    pushq $long_mode_start
-    lretq
-
-# 检查 CPUID 支持
 check_cpuid:
-    # 尝试翻转 EFLAGS 中的 ID 位
-    pushfq
-    pop %rax
-    mov %rax, %rbx
-    xor $0x200000, %rax    # 翻转 ID 位
-    push %rax
-    popfq
-    pushfq
-    pop %rax
-    cmp %rax, %rbx
+    pushfl
+    popl %eax
+    movl %eax, %ecx
+    xorl $0x200000, %eax
+    pushl %eax
+    popfl
+    pushfl
+    popl %eax
+    pushl %ecx
+    popfl
+    cmpl %ecx, %eax
     je no_cpuid
     ret
 
 no_cpuid:
-    mov $'0', %al
-    jmp error
+    movb $'C', %al
+    jmp boot_error
 
-# 检查长模式支持
 check_long_mode:
-    # 检查扩展功能
-    mov $0x80000000, %eax
+    movl $0x80000000, %eax
     cpuid
-    cmp $0x80000001, %eax
+    cmpl $0x80000001, %eax
     jb no_long_mode
 
-    # 检查长模式位
-    mov $0x80000001, %eax
+    movl $0x80000001, %eax
     cpuid
-    test $0x20000000, %edx
+    testl $0x20000000, %edx
     jz no_long_mode
     ret
 
 no_long_mode:
-    mov $'1', %al
-    jmp error
+    movb $'L', %al
+    jmp boot_error
 
-# 设置页表
 setup_page_tables:
-    # 清空页表
-    mov $boot_pml4, %rdi
-    mov $0, %rax
-    mov $1024, %rcx
-    rep stosq
+    movl $boot_pml4, %edi
+    xorl %eax, %eax
+    movl $6144, %ecx
+    rep stosl
 
-    # 设置 PML4
-    mov $boot_pml4, %rdi
-    mov $boot_pdpt, %rax
-    or $0x003, %rax    # 存在 + 可写
-    mov %rax, (%rdi)
+    movl $boot_pml4, %edi
+    movl $boot_pdpt, %eax
+    orl $0x003, %eax
+    movl %eax, (%edi)
 
-    # 设置 PDPT
-    mov $boot_pdpt, %rdi
-    mov $boot_pdt, %rax
-    or $0x003, %rax    # 存在 + 可写
-    mov %rax, (%rdi)
+    movl $boot_pdpt, %edi
+    movl $boot_pdt, %eax
+    movl $4, %ecx
+.Lpdpt:
+    movl %eax, (%edi)
+    addl $0x1000, %eax
+    addl $8, %edi
+    loop .Lpdpt
 
-    # 设置 PDT (映射前 2MB)
-    mov $boot_pdt, %rdi
-    mov $0x000000, %rax
-    or $0x083, %rax    # 存在 + 可写 + 2MB页
-    mov %rax, (%rdi)
-
-    # 映射内核虚拟地址 (高地址)
-    mov $boot_pml4, %rdi
-    add $256 * 8, %rdi    # 第256个条目 (0xFFFF800000000000)
-    mov $boot_pdpt, %rax
-    or $0x003, %rax
-    mov %rax, (%rdi)
-
+    movl $boot_pdt, %edi
+    xorl %ebx, %ebx
+    movl $2048, %ecx
+.Lpde:
+    movl %ebx, %eax
+    orl $0x083, %eax
+    movl %eax, (%edi)
+    addl $0x200000, %ebx
+    addl $8, %edi
+    loop .Lpde
     ret
 
-# 启用分页
 enable_paging:
-    # 设置 CR3 (页目录基址)
-    mov $boot_pml4, %rax
-    mov %rax, %cr3
+    movl $boot_pml4, %eax
+    movl %eax, %cr3
 
-    # 启用 PAE
-    mov %cr4, %rax
-    or $0x20, %rax
-    mov %rax, %cr4
+    movl %cr4, %eax
+    orl $0x20, %eax
+    movl %eax, %cr4
 
-    # 设置长模式位
-    mov $0xC0000080, %ecx
+    movl $0xC0000080, %ecx
     rdmsr
-    or $0x100, %eax
+    orl $0x100, %eax
     wrmsr
 
-    # 启用分页
-    mov %cr0, %rax
-    or $0x80000000, %eax
-    mov %rax, %cr0
-
+    movl %cr0, %eax
+    orl $0x80000001, %eax
+    movl %eax, %cr0
     ret
 
-# 错误处理
-error:
-    # 显示错误代码
-    mov $0xb8000, %rbx
-    mov $0x4f00, %rdx
-    or %rax, %rdx
-    mov %rdx, (%rbx)
+invalid_multiboot:
+    movb $'M', %al
+    jmp boot_error
 
-    # 停机
+boot_error:
+    movl $0xB8000, %edi
+    movb $'!', (%edi)
+    movb $0x4F, 1(%edi)
+    movb %al, 2(%edi)
+    movb $0x4F, 3(%edi)
+    cli
+.Lerror_halt:
     hlt
-    jmp error
+    jmp .Lerror_halt
 
-# 64位模式代码
 .code64
 long_mode_start:
-    # 设置段寄存器
-    mov $0x10, %ax
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-    mov %ax, %ss
+    movw $0x10, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+    movw %ax, %ss
 
-    # 设置高地址栈
-    mov $stack_top, %rsp
-    movabs $0xFFFF800000000000, %rax
-    add %rax, %rsp
-
-    # 恢复 multiboot2 参数
-    popq %rax
-    popq %rbx
-
-    # 调用内核主函数
+    movabs $stack_top, %rsp
+    movl multiboot_magic(%rip), %edi
+    movl multiboot_info(%rip), %esi
     call kernel_main
 
-    # 如果 kernel_main 返回，停机
     cli
+.Lreturned:
     hlt
-    jmp .-1
+    jmp .Lreturned
 
-# 64位全局描述符表
-.align 8
-gdt64:
-    .quad 0x0000000000000000    # 空描述符
-    .quad 0x00209A0000000000    # 64位代码段
-    .quad 0x0000920000000000    # 64位数据段
-
-gdt64_desc:
-    .word gdt64_desc - gdt64 - 1
-    .quad gdt64
+.size _start, . - _start
+.section .note.GNU-stack,"",@progbits

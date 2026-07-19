@@ -1,54 +1,45 @@
-/*
- * kernel.ld - x86_64架构内核链接脚本
- * 定义内核各段的加载地址和布局。
- */
-
+OUTPUT_FORMAT(elf64-x86-64)
+OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
 
 SECTIONS
 {
-    /* 内核加载地址 */
     . = 0x100000;
 
-    /* Multiboot2 头部 */
-    .multiboot2 : ALIGN(8)
+    .multiboot2 ALIGN(8) :
     {
-        *(.multiboot2)
+        KEEP(*(.multiboot2))
     }
 
-    /* 代码段 */
-    .text : ALIGN(4K)
+    .text ALIGN(4096) :
     {
+        *(.text.boot)
         *(.text)
         *(.text.*)
     }
 
-    /* 只读数据段 */
-    .rodata : ALIGN(4K)
+    .rodata ALIGN(4096) :
     {
         *(.rodata)
         *(.rodata.*)
     }
 
-    /* 已初始化数据段 */
-    .data : ALIGN(4K)
+    .data ALIGN(4096) :
     {
         *(.data)
         *(.data.*)
     }
 
-    /* 未初始化数据段 */
-    .bss : ALIGN(4K)
+    .bss ALIGN(4096) (NOLOAD) :
     {
         *(COMMON)
         *(.bss)
         *(.bss.*)
     }
 
-    /* 内核结束标记 */
+    . = ALIGN(4096);
     __kernel_end = .;
 
-    /* 丢弃不需要的段 */
     /DISCARD/ :
     {
         *(.comment)
@@ -58,3 +49,6 @@ SECTIONS
         *(.eh_frame_hdr)
     }
 }
+
+ASSERT(SIZEOF(.multiboot2) > 0, "missing Multiboot2 header")
+ASSERT(__kernel_end < 0x100000000, "kernel must fit below 4 GiB")
