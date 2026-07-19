@@ -24,7 +24,9 @@ boot_pml4:
 boot_pdpt:
     .space 4096
 boot_pdt:
-    .space 4096 * 4
+    .space 4096
+boot_pt:
+    .space 4096
 
 .align 4
 multiboot_magic:
@@ -64,10 +66,8 @@ _start:
     call check_cpuid
     call check_long_mode
     call setup_page_tables
-    call enable_paging
-
     lgdt gdt64_desc
-    ljmp $0x08, $long_mode_start
+    jmp enable_paging
 
 check_cpuid:
     pushfl
@@ -107,7 +107,7 @@ no_long_mode:
 setup_page_tables:
     movl $boot_pml4, %edi
     xorl %eax, %eax
-    movl $6144, %ecx
+    movl $4096, %ecx
     rep stosl
 
     movl $boot_pml4, %edi
@@ -117,32 +117,33 @@ setup_page_tables:
 
     movl $boot_pdpt, %edi
     movl $boot_pdt, %eax
-    movl $4, %ecx
-.Lpdpt:
+    orl $0x003, %eax
     movl %eax, (%edi)
-    addl $0x1000, %eax
-    addl $8, %edi
-    loop .Lpdpt
 
     movl $boot_pdt, %edi
-    xorl %ebx, %ebx
-    movl $2048, %ecx
-.Lpde:
-    movl %ebx, %eax
-    orl $0x083, %eax
+    movl $boot_pt, %eax
+    orl $0x003, %eax
     movl %eax, (%edi)
-    addl $0x200000, %ebx
+
+    movl $boot_pt, %edi
+    xorl %ebx, %ebx
+    movl $512, %ecx
+.Lpte:
+    movl %ebx, %eax
+    orl $0x003, %eax
+    movl %eax, (%edi)
+    addl $0x1000, %ebx
     addl $8, %edi
-    loop .Lpde
+    loop .Lpte
     ret
 
 enable_paging:
-    movl $boot_pml4, %eax
-    movl %eax, %cr3
-
     movl %cr4, %eax
     orl $0x20, %eax
     movl %eax, %cr4
+
+    movl $boot_pml4, %eax
+    movl %eax, %cr3
 
     movl $0xC0000080, %ecx
     rdmsr
@@ -152,7 +153,7 @@ enable_paging:
     movl %cr0, %eax
     orl $0x80000001, %eax
     movl %eax, %cr0
-    ret
+    ljmp $0x08, $long_mode_start
 
 invalid_multiboot:
     movb $'M', %al
