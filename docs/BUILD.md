@@ -2,22 +2,29 @@
 
 ## Build
 
-根 Makefile 是 Meson 的薄封装：
+根目录的 Makefile 是 Meson 的薄封装：
 
 ```bash
 make check-tools
 make all
 ```
 
-等价的直接命令：
+首次配置时可直接使用 Meson：
 
 ```bash
 meson setup build --cross-file=cross/x86_64-none.ini
 meson compile -C build
 ```
 
-修改 `meson.build` 或交叉编译配置后，`make all` 会重新配置已有构建目录。
-需要完全重建时使用：
+已有构建目录可使用：
+
+```bash
+meson setup build --reconfigure --cross-file=cross/x86_64-none.ini
+meson compile -C build
+```
+
+`make all` 会重新配置已有构建目录。Meson 只在首次配置时读取 cross file，
+修改 `cross/x86_64-none.ini` 后需要完全重建：
 
 ```bash
 make clean
@@ -26,8 +33,8 @@ make all
 
 ## ISO And QEMU
 
-`kernel.iso` 由 Meson 调用 `scripts/make_iso.sh` 生成，不在源码树中维护 ISO
-暂存目录。
+`kernel.iso` 由 Meson 调用 `scripts/make_iso.sh` 按需生成到构建目录；ISO
+暂存目录不在源码树中维护。
 
 ```bash
 make qemu
@@ -54,9 +61,11 @@ gdb build/kernel.elf -ex 'target remote localhost:1234'
 ## Verification
 
 ```bash
+make check-tools
+make clean
+make all
 grub-file --is-x86-multiboot build/kernel.elf
-nm -u build/kernel.elf
-readelf -W -h -l -S build/kernel.elf
+test -z "$(nm -u build/kernel.elf)"
 make qemu-smoke
 ```
 

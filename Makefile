@@ -2,10 +2,11 @@ BUILD_DIR ?= build
 CROSS_FILE ?= cross/x86_64-none.ini
 MESON ?= meson
 
-.PHONY: all setup build qemu qemu-smoke debug clean \
+.PHONY: all setup qemu qemu-smoke debug clean \
 	check-tools help
 
-all: build
+all: setup
+	$(MESON) compile -C "$(BUILD_DIR)"
 
 setup:
 	@if [ -d "$(BUILD_DIR)/meson-private" ]; then \
@@ -14,16 +15,13 @@ setup:
 		$(MESON) setup "$(BUILD_DIR)" --cross-file="$(CROSS_FILE)"; \
 	fi
 
-build: setup
-	$(MESON) compile -C "$(BUILD_DIR)"
-
-qemu: check-tools all
+qemu: check-tools setup
 	$(MESON) compile -C "$(BUILD_DIR)" qemu
 
-qemu-smoke: check-tools all
+qemu-smoke: check-tools setup
 	sh ./scripts/qemu-smoke.sh "$(BUILD_DIR)"
 
-debug: check-tools all
+debug: check-tools setup
 	$(MESON) compile -C "$(BUILD_DIR)" debug
 
 clean:

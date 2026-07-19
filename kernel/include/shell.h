@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-void shell_run(void);
+void shell_run(void) __attribute__((noreturn));
 
 #ifdef __cplusplus
 }

@@ -27,47 +27,33 @@ SECTIONS
     /* 代码段 - 紧跟在 multiboot 头部之后 */
     .text ALIGN(16) :
     {
-        __text_start = .;
         *(.text.boot)       /* 启动代码优先 */
         *(.text._start)     /* 入口点 */
         *(.text)
         *(.text.*)
-        __text_end = .;
     }
 
     /* 只读数据段 */
     .rodata ALIGN(4K) :
     {
-        __rodata_start = .;
         *(.rodata)
         *(.rodata.*)
-        __rodata_end = .;
     }
 
     /* 已初始化数据段 */
     .data ALIGN(4K) :
     {
-        __data_start = .;
         *(.data)
         *(.data.*)
-        __data_end = .;
     }
 
     /* 未初始化数据段 */
     .bss ALIGN(4K) (NOLOAD) :
     {
-        __bss_start = .;
         *(COMMON)
         *(.bss)
         *(.bss.*)
-        __bss_end = .;
     }
-
-    /* 内核结束标记 */
-    . = ALIGN(4K);
-    __kernel_start = KERNEL_PHYS_BASE;
-    __kernel_end = .;
-    __kernel_size = __kernel_end - __kernel_start;
 
     /* 丢弃不需要的段 */
     /DISCARD/ :

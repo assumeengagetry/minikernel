@@ -1,6 +1,6 @@
 /* MicroKernel boot entry and serial console. */
 
-#include "../../kernel/include/shell.h"
+#include "shell.h"
 
 extern "C" {
 
@@ -39,6 +39,13 @@ void serial_putc(char c)
     }
 }
 
+int serial_try_getchar(void)
+{
+    if (inb(SERIAL_PORT + 5) & 0x01)
+        return inb(SERIAL_PORT);
+    return -1;
+}
+
 static void serial_write(const char *text)
 {
     while (*text != '\0') {
@@ -48,21 +55,12 @@ static void serial_write(const char *text)
     }
 }
 
-static inline void halt(void)
-{
-    __asm__ __volatile__("hlt");
-}
-
 void kernel_main(void)
 {
     serial_init();
-    serial_write("Initializing MicroKernel 0.1.0\n");
+    serial_write("Initializing MicroKernel " MICROKERNEL_VERSION "\n");
     serial_write("Kernel initialization complete.\n");
     serial_write("Starting shell...\n");
     shell_run();
-
-    for (;;)
-        halt();
 }
-
 }

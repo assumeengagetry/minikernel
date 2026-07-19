@@ -16,8 +16,6 @@ project(
 )
 
 qemu = find_program('qemu-system-x86_64', required : true)
-grub_mkimage = find_program('grub-mkimage', required : true)
-xorriso = find_program('xorriso', required : true)
 sh = find_program('sh', required : true)
 
 kernel_common_args = [
@@ -44,6 +42,7 @@ kernel_cpp_args = kernel_common_args + [
     '-fno-threadsafe-statics',
     '-fno-use-cxa-atexit',
     '-nostdinc++',
+    '-DMICROKERNEL_VERSION="' + meson.project_version() + '"',
 ]
 
 kernel_link_args = [
@@ -116,15 +115,4 @@ run_target(
         '-no-shutdown',
     ],
     depends : kernel_iso,
-)
-
-summary(
-    {
-        'Architecture' : 'x86_64',
-        'Kernel ELF' : 'build/kernel.elf',
-        'QEMU' : qemu.full_path(),
-        'GRUB image builder' : grub_mkimage.full_path(),
-        'xorriso' : xorriso.full_path(),
-    },
-    section : 'Build',
 )

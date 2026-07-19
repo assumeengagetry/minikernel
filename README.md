@@ -25,7 +25,8 @@ make check-tools
 make all
 ```
 
-构建结果位于 `build/kernel.elf`。ISO 会在运行 QEMU 时临时生成。
+构建结果位于 `build/kernel.elf`。运行 QEMU 时会按需生成
+`build/kernel.iso`，两个文件均由 `make clean` 删除。
 
 ## QEMU
 

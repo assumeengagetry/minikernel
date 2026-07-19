@@ -1,7 +1,6 @@
 /* A small serial command shell for kernel debugging. */
 
-#include "../../kernel/include/types.h"
-#include "../../kernel/include/shell.h"
+#include "shell.h"
 
 extern "C" {
 
@@ -10,27 +9,8 @@ extern "C" {
 #define SHELL_MAX_ARGS 16
 #define SHELL_PROMPT "microkernel> "
 
-#define SERIAL_DATA 0x3F8
-#define SERIAL_LSR 0x3FD
-
 extern void serial_putc(char c);
-
-static inline unsigned char inb(unsigned short port)
-{
-    unsigned char value;
-    __asm__ __volatile__("inb %1, %0" : "=a"(value) : "Nd"(port));
-    return value;
-}
-
-static size_t shell_strlen(const char *text)
-{
-    size_t length = 0;
-
-    while (text[length] != '\0')
-        length++;
-
-    return length;
-}
+extern int  serial_try_getchar(void);
 
 static int shell_strcmp(const char *left, const char *right)
 {
@@ -42,21 +22,14 @@ static int shell_strcmp(const char *left, const char *right)
     return *(const unsigned char *)left - *(const unsigned char *)right;
 }
 
-static void shell_strcpy(char *destination, const char *source)
+static int shell_copy(char *destination, const char *source)
 {
-    while ((*destination++ = *source++) != '\0')
-        ;
-}
+    int length = 0;
 
-static void shell_strncpy(char *destination, const char *source, size_t count)
-{
-    size_t index;
+    while ((destination[length] = source[length]) != '\0')
+        length++;
 
-    for (index = 0; index < count && source[index] != '\0'; index++)
-        destination[index] = source[index];
-
-    for (; index < count; index++)
-        destination[index] = '\0';
+    return length;
 }
 
 static int shell_isspace(char value)
@@ -82,9 +55,9 @@ static void shell_newline(void)
 
 static void shell_print_int(long value)
 {
-    char buffer[32];
+    char          buffer[32];
     unsigned long magnitude;
-    int length = 0;
+    int           length = 0;
 
     if (value < 0) {
         shell_putchar('-');
@@ -103,14 +76,15 @@ static void shell_print_int(long value)
 }
 
 static char shell_buffer[SHELL_BUFFER_SIZE];
-static int shell_buffer_pos;
+static int  shell_buffer_pos;
 static char shell_history[SHELL_HISTORY_SIZE][SHELL_BUFFER_SIZE];
-static int shell_history_count;
-static int shell_history_index;
+static int  shell_history_count;
+static int  shell_history_index;
 
 static void shell_history_add(const char *command)
 {
     int index;
+    int length;
 
     if (*command == '\0')
         return;
@@ -124,8 +98,10 @@ static void shell_history_add(const char *command)
     }
 
     index = shell_history_count % SHELL_HISTORY_SIZE;
-    shell_strncpy(shell_history[index], command, SHELL_BUFFER_SIZE - 1);
-    shell_history[index][SHELL_BUFFER_SIZE - 1] = '\0';
+    for (length = 0; length < SHELL_BUFFER_SIZE - 1 && command[length] != '\0';
+         length++)
+        shell_history[index][length] = command[length];
+    shell_history[index][length] = '\0';
     shell_history_count++;
     shell_history_index = shell_history_count;
 }
@@ -138,7 +114,7 @@ static const char *shell_history_get(int offset)
     int index = shell_history_index + offset;
 
     if (index < first || index >= shell_history_count)
-        return NULL;
+        return nullptr;
 
     shell_history_index = index;
     return shell_history[index % SHELL_HISTORY_SIZE];
@@ -146,7 +122,7 @@ static const char *shell_history_get(int offset)
 
 static int shell_parse_args(char *line, char *argv[], int max_args)
 {
-    int argc = 0;
+    int   argc   = 0;
     char *cursor = line;
 
     while (*cursor != '\0' && argc < max_args) {
@@ -157,7 +133,7 @@ static int shell_parse_args(char *line, char *argv[], int max_args)
             break;
 
         if (*cursor == '"' || *cursor == '\'') {
-            char quote = *cursor++;
+            char quote   = *cursor++;
             argv[argc++] = cursor;
             while (*cursor != '\0' && *cursor != quote)
                 cursor++;
@@ -192,7 +168,7 @@ static void cmd_version(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    shell_puts("\r\nMicroKernel v0.1.0\r\n");
+    shell_puts("\r\nMicroKernel v" MICROKERNEL_VERSION "\r\n");
     shell_puts("Architecture: x86_64\r\n");
 }
 
@@ -242,23 +218,19 @@ static void cmd_history(int argc, char *argv[])
 typedef void (*shell_command_function)(int argc, char *argv[]);
 
 struct shell_command {
-    const char *name;
+    const char            *name;
     shell_command_function function;
 };
 
-static struct shell_command shell_commands[] = {
-    { "help", cmd_help },
-    { "version", cmd_version },
-    { "clear", cmd_clear },
-    { "echo", cmd_echo },
-    { "history", cmd_history },
-    { NULL, NULL },
+static const struct shell_command shell_commands[] = {
+    {"help", cmd_help}, {"version", cmd_version}, {"clear", cmd_clear},
+    {"echo", cmd_echo}, {"history", cmd_history}, {nullptr, nullptr},
 };
 
 static void shell_execute(char *line)
 {
     char *argv[SHELL_MAX_ARGS];
-    int argc;
+    int   argc;
 
     while (*line != '\0' && shell_isspace(*line))
         line++;
@@ -271,8 +243,8 @@ static void shell_execute(char *line)
     if (argc == 0)
         return;
 
-    for (struct shell_command *command = shell_commands;
-         command->name != NULL; command++) {
+    for (const struct shell_command *command = shell_commands;
+         command->name != nullptr; command++) {
         if (shell_strcmp(argv[0], command->name) == 0) {
             command->function(argc, argv);
             return;
@@ -304,11 +276,10 @@ static void shell_handle_escape(char value, int *escape_state)
     if (value == 'A' || value == 'B') {
         const char *command = shell_history_get(value == 'A' ? -1 : 1);
 
-        if (command != NULL) {
-            shell_strcpy(shell_buffer, command);
-            shell_buffer_pos = (int)shell_strlen(shell_buffer);
+        if (command != nullptr) {
+            shell_buffer_pos = shell_copy(shell_buffer, command);
         } else {
-            shell_buffer[0] = '\0';
+            shell_buffer[0]  = '\0';
             shell_buffer_pos = 0;
         }
         shell_refresh_line();
@@ -338,8 +309,8 @@ static void shell_handle_char(char value)
         shell_newline();
         shell_buffer[shell_buffer_pos] = '\0';
         shell_execute(shell_buffer);
-        shell_buffer_pos = 0;
-        shell_buffer[0] = '\0';
+        shell_buffer_pos    = 0;
+        shell_buffer[0]     = '\0';
         shell_history_index = shell_history_count;
         shell_puts(SHELL_PROMPT);
         break;
@@ -353,11 +324,11 @@ static void shell_handle_char(char value)
     case 0x03:
         shell_puts("^C\r\n");
         shell_buffer_pos = 0;
-        shell_buffer[0] = '\0';
+        shell_buffer[0]  = '\0';
         shell_puts(SHELL_PROMPT);
         break;
     case 0x0C:
-        cmd_clear(0, NULL);
+        cmd_clear(0, nullptr);
         shell_puts(SHELL_PROMPT);
         shell_puts(shell_buffer);
         break;
@@ -365,28 +336,21 @@ static void shell_handle_char(char value)
         if (value >= 0x20 && value < 0x7F &&
             shell_buffer_pos < SHELL_BUFFER_SIZE - 1) {
             shell_buffer[shell_buffer_pos++] = value;
-            shell_buffer[shell_buffer_pos] = '\0';
+            shell_buffer[shell_buffer_pos]   = '\0';
             shell_putchar(value);
         }
         break;
     }
 }
 
-static int serial_try_getchar(void)
+void shell_run(void)
 {
-    if (inb(SERIAL_LSR) & 0x01)
-        return inb(SERIAL_DATA);
-    return -1;
-}
-
-static void shell_init(void)
-{
-    shell_buffer_pos = 0;
-    shell_buffer[0] = '\0';
+    shell_buffer_pos    = 0;
+    shell_buffer[0]     = '\0';
     shell_history_count = 0;
     shell_history_index = 0;
 
-    shell_puts("MicroKernel v0.1.0\r\n");
+    shell_puts("MicroKernel v" MICROKERNEL_VERSION "\r\n");
     shell_puts("Type 'help' for commands.\r\n\r\n");
     shell_puts(SHELL_PROMPT);
 
@@ -399,10 +363,4 @@ static void shell_init(void)
             __asm__ __volatile__("pause");
     }
 }
-
-void shell_run(void)
-{
-    shell_init();
-}
-
 }

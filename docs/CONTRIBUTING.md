@@ -9,16 +9,7 @@
 
 ## Verification
 
-提交前按顺序运行：
-
-```bash
-make check-tools
-make clean
-make all
-grub-file --is-x86-multiboot build/kernel.elf
-test -z "$(nm -u build/kernel.elf)"
-make qemu-smoke
-```
+提交前按顺序完成 [`BUILD.md`](BUILD.md#verification) 中的完整验证流程。
 
 仓库当前没有独立单元测试、lint 或 typecheck 目标；QEMU 冒烟测试是运行时
 验收入口。
